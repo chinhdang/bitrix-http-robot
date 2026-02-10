@@ -56,6 +56,17 @@ async function handleRobotSettings(req, res) {
       margin-bottom: 20px;
     }
 
+    .input-with-button {
+      display: flex;
+      gap: 8px;
+      align-items: start;
+    }
+
+    .input-with-button > input,
+    .input-with-button > textarea {
+      flex: 1;
+    }
+
     label {
       display: block;
       margin-bottom: 8px;
@@ -75,6 +86,30 @@ async function handleRobotSettings(req, res) {
       font-size: 14px;
       font-family: inherit;
       transition: border-color 0.3s;
+    }
+
+    .btn-dots {
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      color: #666;
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .btn-dots:hover {
+      background: #e8e8e8;
+      border-color: #2fc6f6;
+      color: #2fc6f6;
     }
 
     input:focus,
@@ -111,7 +146,7 @@ async function handleRobotSettings(req, res) {
 
     .form-data-row {
       display: grid;
-      grid-template-columns: 1fr 2fr 40px;
+      grid-template-columns: 1fr 2fr 38px 38px;
       gap: 10px;
       margin-bottom: 10px;
       align-items: start;
@@ -208,6 +243,120 @@ async function handleRobotSettings(req, res) {
       color: #999;
       font-size: 14px;
     }
+
+    /* Variable Picker Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 18px;
+      color: #333;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: #999;
+      cursor: pointer;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-close:hover {
+      color: #333;
+    }
+
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .modal-search {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      margin-bottom: 15px;
+    }
+
+    .variable-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .variable-item {
+      padding: 12px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .variable-item:hover {
+      background: #f0f9ff;
+      border-color: #2fc6f6;
+    }
+
+    .variable-item-name {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 4px;
+    }
+
+    .variable-item-code {
+      font-size: 12px;
+      color: #2fc6f6;
+      font-family: 'Courier New', monospace;
+    }
+
+    .no-variables {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+    }
   </style>
 </head>
 <body>
@@ -221,7 +370,10 @@ async function handleRobotSettings(req, res) {
     <form id="configForm">
       <div class="form-group">
         <label for="url">URL *</label>
-        <input type="text" id="url" placeholder="https://api.example.com/endpoint" required>
+        <div class="input-with-button">
+          <input type="text" id="url" placeholder="https://api.example.com/endpoint" required>
+          <button type="button" class="btn-dots" onclick="showVariablePicker('url')" title="Insert variable">⋯</button>
+        </div>
         <div class="help-text">Target URL for the HTTP request</div>
       </div>
 
@@ -237,7 +389,10 @@ async function handleRobotSettings(req, res) {
 
       <div class="form-group">
         <label for="headers">Headers (JSON)</label>
-        <textarea id="headers" placeholder='{"Content-Type": "application/json", "Authorization": "Bearer token"}'></textarea>
+        <div class="input-with-button">
+          <textarea id="headers" placeholder='{"Content-Type": "application/json", "Authorization": "Bearer token"}'></textarea>
+          <button type="button" class="btn-dots" onclick="showVariablePicker('headers')" title="Insert variable">⋯</button>
+        </div>
         <div class="help-text">Request headers as JSON object</div>
       </div>
 
@@ -256,7 +411,10 @@ async function handleRobotSettings(req, res) {
 
       <div class="form-group">
         <label for="rawBody">Or use Raw Body (overrides Form Data if filled)</label>
-        <textarea id="rawBody" placeholder='{"key": "value"} or any raw content'></textarea>
+        <div class="input-with-button">
+          <textarea id="rawBody" placeholder='{"key": "value"} or any raw content'></textarea>
+          <button type="button" class="btn-dots" onclick="showVariablePicker('rawBody')" title="Insert variable">⋯</button>
+        </div>
         <div class="help-text">Use this for JSON, XML, or any raw body content</div>
       </div>
 
@@ -273,12 +431,81 @@ async function handleRobotSettings(req, res) {
     </form>
   </div>
 
+  <!-- Variable Picker Modal -->
+  <div class="modal-overlay" id="variableModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>📋 Select Variable</h3>
+        <button class="modal-close" onclick="closeVariablePicker()">×</button>
+      </div>
+      <div class="modal-body">
+        <input type="text" class="modal-search" id="variableSearch" placeholder="Search variables..." onkeyup="filterVariables()">
+        <ul class="variable-list" id="variableList"></ul>
+      </div>
+    </div>
+  </div>
+
   <script>
     let formDataRows = [];
+    let placementData = null;
+    let availableVariables = [];
 
     // Initialize Bitrix24 App
     BX24.init(function() {
       console.log('Bitrix24 initialized');
+
+      // Get placement info and available interface
+      placementData = BX24.placement.info();
+      console.log('Placement data:', placementData);
+
+      // Check available commands
+      BX24.placement.getInterface(function(result) {
+        console.log('Available commands:', result);
+      });
+
+      // Extract available variables from placement options
+      if (placementData.options) {
+        try {
+          const options = typeof placementData.options === 'string'
+            ? JSON.parse(placementData.options)
+            : placementData.options;
+
+          // Get document fields if available
+          if (options.document_fields) {
+            availableVariables = Object.keys(options.document_fields).map(key => ({
+              code: key,
+              name: options.document_fields[key].Name || key,
+              template: '{{Document:' + key + '}}'
+            }));
+          }
+
+          // Get template variables if available
+          if (options.template && options.template.variables) {
+            Object.keys(options.template.variables).forEach(key => {
+              availableVariables.push({
+                code: key,
+                name: options.template.variables[key].Name || key,
+                template: '{{Variable:' + key + '}}'
+              });
+            });
+          }
+
+          // Get template parameters if available
+          if (options.template && options.template.parameters) {
+            Object.keys(options.template.parameters).forEach(key => {
+              availableVariables.push({
+                code: key,
+                name: options.template.parameters[key].Name || key,
+                template: '{{Parameter:' + key + '}}'
+              });
+            });
+          }
+
+          console.log('Available variables:', availableVariables);
+        } catch (e) {
+          console.error('Error parsing placement options:', e);
+        }
+      }
 
       // Load saved configuration
       loadConfiguration();
@@ -333,7 +560,8 @@ async function handleRobotSettings(req, res) {
       const rowHtml = \`
         <div class="form-data-row" id="\${rowId}">
           <input type="text" placeholder="Key" value="\${key}" onchange="updateFormDataRow('\${rowId}', 'key', this.value)">
-          <input type="text" placeholder="Value (can use {{Document:FIELD}})" value="\${value}" onchange="updateFormDataRow('\${rowId}', 'value', this.value)">
+          <input type="text" placeholder="Value (can use {{Document:FIELD}})" value="\${value}" id="formdata_\${rowId}" onchange="updateFormDataRow('\${rowId}', 'value', this.value)">
+          <button type="button" class="btn-dots" onclick="showVariablePicker('formdata_\${rowId}')" title="Insert variable">⋯</button>
           <button type="button" class="btn btn-danger" onclick="removeFormDataRow('\${rowId}')" title="Remove">×</button>
         </div>
       \`;
@@ -362,6 +590,118 @@ async function handleRobotSettings(req, res) {
       if (formDataRows.length === 0) {
         document.getElementById('formDataContainer').innerHTML =
           '<div class="empty-state">Click "+ Add Field" to add form data fields</div>';
+      }
+    }
+
+    let currentFieldId = null;
+
+    // Show variable picker
+    function showVariablePicker(fieldId) {
+      currentFieldId = fieldId;
+
+      // Try to use native Bitrix24 field picker if available
+      BX24.placement.call('showFieldPicker', { fieldId: fieldId }, function(result) {
+        console.log('Field picker result:', result);
+        if (result && result.value) {
+          insertVariableIntoField(fieldId, result.value);
+          return;
+        }
+
+        // If native picker not available, show custom picker
+        showCustomVariablePicker();
+      });
+    }
+
+    // Show custom variable picker modal
+    function showCustomVariablePicker() {
+      // Default variables if none loaded yet
+      if (availableVariables.length === 0) {
+        availableVariables = [
+          { code: 'ID', name: 'Document ID', template: '{{Document:ID}}' },
+          { code: 'TITLE', name: 'Document Title', template: '{{Document:TITLE}}' },
+          { code: 'CREATED_BY', name: 'Created By', template: '{{Document:CREATED_BY}}' },
+          { code: 'MODIFIED_BY', name: 'Modified By', template: '{{Document:MODIFIED_BY}}' },
+        ];
+      }
+
+      // Render variable list
+      renderVariableList(availableVariables);
+
+      // Show modal
+      document.getElementById('variableModal').classList.add('active');
+      document.getElementById('variableSearch').value = '';
+      document.getElementById('variableSearch').focus();
+    }
+
+    // Render variable list
+    function renderVariableList(variables) {
+      const listContainer = document.getElementById('variableList');
+
+      if (variables.length === 0) {
+        listContainer.innerHTML = '<div class="no-variables">No variables found</div>';
+        return;
+      }
+
+      listContainer.innerHTML = variables.map(v => \`
+        <li class="variable-item" onclick="selectVariable('\${v.template}')">
+          <div class="variable-item-name">\${v.name}</div>
+          <div class="variable-item-code">\${v.template}</div>
+        </li>
+      \`).join('');
+    }
+
+    // Filter variables by search
+    function filterVariables() {
+      const search = document.getElementById('variableSearch').value.toLowerCase();
+      const filtered = availableVariables.filter(v =>
+        v.name.toLowerCase().includes(search) ||
+        v.code.toLowerCase().includes(search) ||
+        v.template.toLowerCase().includes(search)
+      );
+      renderVariableList(filtered);
+    }
+
+    // Select variable from picker
+    function selectVariable(template) {
+      insertVariableIntoField(currentFieldId, template);
+      closeVariablePicker();
+    }
+
+    // Close variable picker
+    function closeVariablePicker() {
+      document.getElementById('variableModal').classList.remove('active');
+      currentFieldId = null;
+    }
+
+    // Close modal when clicking outside
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('variableModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeVariablePicker();
+        }
+      });
+    });
+
+    // Insert variable into field
+    function insertVariableIntoField(fieldId, variable) {
+      const field = document.getElementById(fieldId);
+      if (field) {
+        const start = field.selectionStart;
+        const end = field.selectionEnd;
+        const text = field.value;
+
+        // Insert at cursor position
+        field.value = text.substring(0, start) + variable + text.substring(end);
+
+        // Update form data row if this is a form data field
+        if (fieldId.startsWith('formdata_')) {
+          const rowId = fieldId.replace('formdata_', '');
+          updateFormDataRow(rowId, 'value', field.value);
+        }
+
+        // Set cursor position after inserted variable
+        field.selectionStart = field.selectionEnd = start + variable.length;
+        field.focus();
       }
     }
 
