@@ -155,9 +155,9 @@ async function handleRobotSettings(req, res) {
     .form-data-section {
       border: 1px solid #eef2f5;
       border-radius: 10px;
-      padding: 24px;
+      padding: 16px;
       background: #fafbfc;
-      margin-bottom: 20px;
+      margin-bottom: 12px;
     }
 
     .form-data-header {
@@ -293,9 +293,16 @@ async function handleRobotSettings(req, res) {
     .actions {
       display: flex;
       gap: 12px;
-      margin-top: 32px;
-      padding-top: 24px;
+      margin-top: 16px;
+      padding-top: 16px;
       border-top: 1px solid #eef2f5;
+    }
+
+    /* Two columns for compact fields */
+    .form-row-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
     }
 
     .help-text {
@@ -322,7 +329,7 @@ async function handleRobotSettings(req, res) {
 
     .empty-state {
       text-align: center;
-      padding: 32px 20px;
+      padding: 16px 20px;
       color: #a8adb4;
       font-size: 13px;
     }
@@ -671,30 +678,29 @@ async function handleRobotSettings(req, res) {
       <div id="tab-request" class="tab-content active">
         <div class="form-group">
           <label for="url">URL *</label>
-          <div class="input-with-button">
-            <div class="input-wrapper">
-              <input type="text" id="url" placeholder="https://api.example.com/endpoint" required maxlength="2000" oninput="updateCharCounter(this, 'url-counter')">
-              <span id="url-counter" class="char-counter">0/2000</span>
-            </div>
-            <button type="button" class="btn-dots" onclick="showVariablePicker('url')" title="Insert variable">⋯</button>
+          <div class="input-wrapper">
+            <input type="text" id="url" placeholder="https://api.example.com/endpoint" required maxlength="2000" oninput="updateCharCounter(this, 'url-counter')">
+            <span id="url-counter" class="char-counter">0/2000</span>
           </div>
+          <button type="button" class="btn-dots" onclick="showVariablePicker('url')" title="Insert variable" style="position: absolute; right: 24px; margin-top: -38px;">⋯</button>
           <div class="help-text">Target URL for the HTTP request</div>
         </div>
 
-        <div class="form-group">
-          <label for="method">HTTP Method *</label>
-          <select id="method" required>
-            <option value="GET">GET</option>
-            <option value="POST">POST</option>
-            <option value="PUT">PUT</option>
-            <option value="DELETE">DELETE</option>
-          </select>
-        </div>
+        <div class="form-row-2col">
+          <div class="form-group">
+            <label for="method">HTTP Method *</label>
+            <select id="method" required>
+              <option value="GET">GET</option>
+              <option value="POST">POST</option>
+              <option value="PUT">PUT</option>
+              <option value="DELETE">DELETE</option>
+            </select>
+          </div>
 
-        <div class="form-group">
-          <label for="timeout">Timeout (ms)</label>
-          <input type="number" id="timeout" value="30000" min="1000" max="300000">
-          <div class="help-text">Request timeout in milliseconds (max: 300000)</div>
+          <div class="form-group">
+            <label for="timeout">Timeout (ms)</label>
+            <input type="number" id="timeout" value="30000" min="1000" max="300000">
+          </div>
         </div>
       </div>
 
@@ -745,13 +751,11 @@ async function handleRobotSettings(req, res) {
         <div id="body-raw" class="body-section" style="display: none;">
           <div class="form-group">
             <label for="rawBody">Raw Body Content</label>
-            <div class="input-with-button">
-              <div class="input-wrapper">
-                <textarea id="rawBody" placeholder='{"key": "value"} or any raw content' rows="8" maxlength="10000" oninput="updateCharCounter(this, 'rawBody-counter')"></textarea>
-                <span id="rawBody-counter" class="char-counter">0/10000</span>
-              </div>
-              <button type="button" class="btn-dots" onclick="showVariablePicker('rawBody')" title="Insert variable">⋯</button>
+            <div class="input-wrapper">
+              <textarea id="rawBody" placeholder='{"key": "value"} or any raw content' rows="4" maxlength="10000" oninput="updateCharCounter(this, 'rawBody-counter')"></textarea>
+              <span id="rawBody-counter" class="char-counter">0/10000</span>
             </div>
+            <button type="button" class="btn-dots" onclick="showVariablePicker('rawBody')" title="Insert variable" style="position: absolute; right: 24px; margin-top: -94px;">⋯</button>
             <div class="help-text">JSON, XML, or any raw body content</div>
           </div>
         </div>
