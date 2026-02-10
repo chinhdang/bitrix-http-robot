@@ -43,7 +43,7 @@ async function handleRobotSettings(req, res) {
       max-width: 100%;
       margin: 0;
       background: #ffffff;
-      padding: 24px 28px;
+      padding: 16px 20px;
     }
 
     h2 {
@@ -55,7 +55,7 @@ async function handleRobotSettings(req, res) {
     }
 
     .form-group {
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
 
     .input-with-button {
@@ -71,7 +71,7 @@ async function handleRobotSettings(req, res) {
 
     label {
       display: block;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       font-weight: 500;
       color: #525c69;
       font-size: 13px;
@@ -223,21 +223,21 @@ async function handleRobotSettings(req, res) {
     }
 
     .btn-success {
-      background: linear-gradient(180deg, #57c489 0%, #48b57a 100%);
+      background: linear-gradient(180deg, #2fc6f6 0%, #1fb5e5 100%);
       color: white;
-      padding: 12px 28px;
+      padding: 10px 24px;
       font-size: 13px;
       box-shadow:
-        0 0 0 1px rgba(87, 196, 137, 0.1),
+        0 0 0 1px rgba(47, 198, 246, 0.1),
         0 1px 2px 0 rgba(0, 0, 0, 0.05);
     }
 
     .btn-success:hover {
-      background: linear-gradient(180deg, #48b57a 0%, #39a66b 100%);
+      background: linear-gradient(180deg, #1fb5e5 0%, #0ea5d5 100%);
       box-shadow:
-        0 0 0 1px rgba(87, 196, 137, 0.2),
-        0 4px 6px -1px rgba(87, 196, 137, 0.2),
-        0 2px 4px -2px rgba(87, 196, 137, 0.15);
+        0 0 0 1px rgba(47, 198, 246, 0.2),
+        0 4px 6px -1px rgba(47, 198, 246, 0.2),
+        0 2px 4px -2px rgba(47, 198, 246, 0.15);
       transform: translateY(-1px);
     }
 
@@ -331,12 +331,12 @@ async function handleRobotSettings(req, res) {
     .tabs {
       display: flex;
       border-bottom: 1px solid #eef2f5;
-      margin-bottom: 24px;
-      gap: 4px;
+      margin-bottom: 16px;
+      gap: 2px;
     }
 
     .tab {
-      padding: 12px 20px;
+      padding: 10px 16px;
       border: none;
       background: none;
       color: #525c69;
@@ -392,6 +392,52 @@ async function handleRobotSettings(req, res) {
       font-family: 'Monaco', 'Courier New', monospace;
       font-size: 12px;
       color: #2fc6f6;
+    }
+
+    /* Segmented Control for Body Type */
+    .segmented-control {
+      display: inline-flex;
+      background: #f3f5f7;
+      border-radius: 8px;
+      padding: 3px;
+      gap: 2px;
+      margin-bottom: 16px;
+    }
+
+    .segment {
+      padding: 6px 16px;
+      border: none;
+      background: transparent;
+      color: #525c69;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .segment:hover {
+      background: rgba(47, 198, 246, 0.1);
+      color: #2fc6f6;
+    }
+
+    .segment.active {
+      background: #ffffff;
+      color: #2fc6f6;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Headers as Key-Value Pairs */
+    .header-row {
+      display: grid;
+      grid-template-columns: 1fr 2fr 38px 38px;
+      gap: 8px;
+      margin-bottom: 8px;
+      align-items: start;
+    }
+
+    .header-row input {
+      margin-bottom: 0;
     }
 
     /* Variable Picker Modal - B24UI Style */
@@ -654,68 +700,135 @@ async function handleRobotSettings(req, res) {
 
       <!-- Headers Tab -->
       <div id="tab-headers" class="tab-content">
-        <div class="form-group">
-          <label for="headers">Request Headers (JSON)</label>
-          <div class="input-with-button">
-            <div class="input-wrapper">
-              <textarea id="headers" placeholder='{"Content-Type": "application/json", "Authorization": "Bearer token"}' rows="6" maxlength="5000" oninput="updateCharCounter(this, 'headers-counter')"></textarea>
-              <span id="headers-counter" class="char-counter">0/5000</span>
-            </div>
-            <button type="button" class="btn-dots" onclick="showVariablePicker('headers')" title="Insert variable">⋯</button>
+        <div class="form-data-section">
+          <div class="form-data-header">
+            <h3>Request Headers</h3>
+            <button type="button" class="btn btn-primary" onclick="addHeaderRow()">+ Add Header</button>
           </div>
-          <div class="help-text">Request headers as JSON object</div>
+
+          <div id="headersContainer">
+            <div class="empty-state">
+              Click "+ Add Header" to add request headers
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Body Tab -->
       <div id="tab-body" class="tab-content">
-        <div class="form-data-section">
-          <div class="form-data-header">
-            <h3>Form Data Fields</h3>
-            <button type="button" class="btn btn-primary" onclick="addFormDataRow()">+ Add Field</button>
+        <div class="form-group">
+          <label>Body Type</label>
+          <div class="segmented-control">
+            <button type="button" class="segment active" onclick="switchBodyType('none')">None</button>
+            <button type="button" class="segment" onclick="switchBodyType('form-data')">Form Data</button>
+            <button type="button" class="segment" onclick="switchBodyType('raw')">Raw</button>
           </div>
+        </div>
 
-          <div id="formDataContainer">
-            <div class="empty-state">
-              Click "+ Add Field" to add form data fields
+        <!-- Form Data Section -->
+        <div id="body-form-data" class="body-section">
+          <div class="form-data-section">
+            <div class="form-data-header">
+              <h3>Form Data Fields</h3>
+              <button type="button" class="btn btn-primary" onclick="addFormDataRow()">+ Add Field</button>
+            </div>
+
+            <div id="formDataContainer">
+              <div class="empty-state">
+                Click "+ Add Field" to add form data fields
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="form-group" style="margin-top: 24px;">
-          <label for="rawBody">Raw Body (overrides Form Data if filled)</label>
-          <div class="input-with-button">
-            <div class="input-wrapper">
-              <textarea id="rawBody" placeholder='{"key": "value"} or any raw content' rows="8" maxlength="10000" oninput="updateCharCounter(this, 'rawBody-counter')"></textarea>
-              <span id="rawBody-counter" class="char-counter">0/10000</span>
+        <!-- Raw Body Section -->
+        <div id="body-raw" class="body-section" style="display: none;">
+          <div class="form-group">
+            <label for="rawBody">Raw Body Content</label>
+            <div class="input-with-button">
+              <div class="input-wrapper">
+                <textarea id="rawBody" placeholder='{"key": "value"} or any raw content' rows="8" maxlength="10000" oninput="updateCharCounter(this, 'rawBody-counter')"></textarea>
+                <span id="rawBody-counter" class="char-counter">0/10000</span>
+              </div>
+              <button type="button" class="btn-dots" onclick="showVariablePicker('rawBody')" title="Insert variable">⋯</button>
             </div>
-            <button type="button" class="btn-dots" onclick="showVariablePicker('rawBody')" title="Insert variable">⋯</button>
+            <div class="help-text">JSON, XML, or any raw body content</div>
           </div>
-          <div class="help-text">Use this for JSON, XML, or any raw body content</div>
         </div>
       </div>
 
       <!-- Authorization Tab -->
       <div id="tab-auth" class="tab-content">
-        <div class="alert alert-info">
-          <strong>Tip:</strong> Use Headers tab to add Authorization header, or use the ⋯ button to insert variables
+        <div class="form-group">
+          <label for="authType">Authorization Type</label>
+          <select id="authType" onchange="switchAuthType(this.value)">
+            <option value="none">No Auth</option>
+            <option value="bearer">Bearer Token</option>
+            <option value="basic">Basic Auth</option>
+            <option value="api-key">API Key</option>
+          </select>
         </div>
 
-        <div class="form-group">
-          <label>Common Authorization Examples:</label>
-          <div class="help-text" style="margin-top: 12px; line-height: 1.8;">
-            <strong>Bearer Token:</strong><br>
-            <code>{"Authorization": "Bearer YOUR_TOKEN"}</code><br><br>
-            <strong>Basic Auth:</strong><br>
-            <code>{"Authorization": "Basic BASE64_CREDENTIALS"}</code><br><br>
-            <strong>API Key:</strong><br>
-            <code>{"X-API-Key": "YOUR_API_KEY"}</code>
+        <!-- Bearer Token -->
+        <div id="auth-bearer" class="auth-section" style="display: none;">
+          <div class="form-group">
+            <label for="bearerToken">Bearer Token</label>
+            <div class="input-with-button">
+              <div class="input-wrapper">
+                <input type="text" id="bearerToken" placeholder="Enter token" maxlength="500" oninput="updateCharCounter(this, 'bearer-counter')">
+                <span id="bearer-counter" class="char-counter">0/500</span>
+              </div>
+              <button type="button" class="btn-dots" onclick="showVariablePicker('bearerToken')" title="Insert variable">⋯</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Basic Auth -->
+        <div id="auth-basic" class="auth-section" style="display: none;">
+          <div class="form-group">
+            <label for="basicUsername">Username</label>
+            <div class="input-with-button">
+              <input type="text" id="basicUsername" placeholder="Username">
+              <button type="button" class="btn-dots" onclick="showVariablePicker('basicUsername')" title="Insert variable">⋯</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="basicPassword">Password</label>
+            <div class="input-with-button">
+              <input type="password" id="basicPassword" placeholder="Password">
+              <button type="button" class="btn-dots" onclick="showVariablePicker('basicPassword')" title="Insert variable">⋯</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- API Key -->
+        <div id="auth-api-key" class="auth-section" style="display: none;">
+          <div class="form-group">
+            <label for="apiKeyName">Key Name</label>
+            <input type="text" id="apiKeyName" placeholder="e.g., X-API-Key, api_key">
+          </div>
+          <div class="form-group">
+            <label for="apiKeyValue">Key Value</label>
+            <div class="input-with-button">
+              <div class="input-wrapper">
+                <input type="text" id="apiKeyValue" placeholder="Enter API key" maxlength="500" oninput="updateCharCounter(this, 'apikey-counter')">
+                <span id="apikey-counter" class="char-counter">0/500</span>
+              </div>
+              <button type="button" class="btn-dots" onclick="showVariablePicker('apiKeyValue')" title="Insert variable">⋯</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="apiKeyLocation">Add to</label>
+            <select id="apiKeyLocation">
+              <option value="header">Header</option>
+              <option value="query">Query Parameter</option>
+            </select>
           </div>
         </div>
       </div>
 
       <div class="actions">
-        <button type="submit" class="btn btn-success">Save Configuration</button>
+        <button type="submit" class="btn btn-success">Save</button>
         <button type="button" class="btn btn-secondary" onclick="BX24.closeApplication()">Cancel</button>
       </div>
     </form>
@@ -737,8 +850,11 @@ async function handleRobotSettings(req, res) {
 
   <script>
     let formDataRows = [];
+    let headerRows = [];
     let placementData = null;
     let availableVariables = [];
+    let currentBodyType = 'none';
+    let currentAuthType = 'none';
 
     // Tab switching
     function switchTab(tabName) {
@@ -758,6 +874,7 @@ async function handleRobotSettings(req, res) {
     // Character counter
     function updateCharCounter(input, counterId) {
       const counter = document.getElementById(counterId);
+      if (!counter) return;
       const current = input.value.length;
       const max = input.maxLength;
       counter.textContent = current + '/' + max;
@@ -769,6 +886,89 @@ async function handleRobotSettings(req, res) {
         counter.style.color = '#ff9f43';
       } else {
         counter.style.color = '#a8adb4';
+      }
+    }
+
+    // Switch body type
+    function switchBodyType(type) {
+      currentBodyType = type;
+
+      // Update segments
+      document.querySelectorAll('.segment').forEach(seg => seg.classList.remove('active'));
+      event.target.classList.add('active');
+
+      // Show/hide sections
+      document.getElementById('body-form-data').style.display = type === 'form-data' ? 'block' : 'none';
+      document.getElementById('body-raw').style.display = type === 'raw' ? 'block' : 'none';
+    }
+
+    // Switch auth type
+    function switchAuthType(type) {
+      currentAuthType = type;
+
+      // Hide all auth sections
+      document.querySelectorAll('.auth-section').forEach(section => {
+        section.style.display = 'none';
+      });
+
+      // Show selected section
+      if (type !== 'none') {
+        const section = document.getElementById('auth-' + type);
+        if (section) section.style.display = 'block';
+      }
+    }
+
+    // Add header row
+    function addHeaderRow(key = '', value = '') {
+      const container = document.getElementById('headersContainer');
+
+      // Remove empty state message
+      if (headerRows.length === 0) {
+        container.innerHTML = '';
+      }
+
+      const rowId = 'header_' + Date.now();
+      const row = {
+        id: rowId,
+        key: key,
+        value: value
+      };
+
+      headerRows.push(row);
+
+      const rowHtml = \`
+        <div class="header-row" id="\${rowId}">
+          <input type="text" placeholder="Header Name" value="\${key}" onchange="updateHeaderRow('\${rowId}', 'key', this.value)">
+          <input type="text" placeholder="Header Value" value="\${value}" id="header_val_\${rowId}" onchange="updateHeaderRow('\${rowId}', 'value', this.value)">
+          <button type="button" class="btn-dots" onclick="showVariablePicker('header_val_\${rowId}')" title="Insert variable">⋯</button>
+          <button type="button" class="btn btn-danger" onclick="removeHeaderRow('\${rowId}')" title="Remove">×</button>
+        </div>
+      \`;
+
+      container.insertAdjacentHTML('beforeend', rowHtml);
+    }
+
+    // Update header row
+    function updateHeaderRow(rowId, field, value) {
+      const row = headerRows.find(r => r.id === rowId);
+      if (row) {
+        row[field] = value;
+      }
+    }
+
+    // Remove header row
+    function removeHeaderRow(rowId) {
+      const element = document.getElementById(rowId);
+      if (element) {
+        element.remove();
+      }
+
+      headerRows = headerRows.filter(r => r.id !== rowId);
+
+      // Show empty state if no rows
+      if (headerRows.length === 0) {
+        document.getElementById('headersContainer').innerHTML =
+          '<div class="empty-state">Click "+ Add Header" to add request headers</div>';
       }
     }
 
@@ -852,15 +1052,52 @@ async function handleRobotSettings(req, res) {
 
           if (config.url) document.getElementById('url').value = config.url;
           if (config.method) document.getElementById('method').value = config.method;
-          if (config.headers) document.getElementById('headers').value = config.headers;
-          if (config.rawBody) document.getElementById('rawBody').value = config.rawBody;
           if (config.timeout) document.getElementById('timeout').value = config.timeout;
 
-          // Load form data rows
-          if (config.formData && Array.isArray(config.formData)) {
-            config.formData.forEach(row => {
-              addFormDataRow(row.key, row.value);
+          // Load headers
+          if (config.headers && Array.isArray(config.headers)) {
+            config.headers.forEach(header => {
+              addHeaderRow(header.key, header.value);
             });
+          }
+
+          // Load body type and data
+          if (config.bodyType) {
+            currentBodyType = config.bodyType;
+            const segments = document.querySelectorAll('.segment');
+            segments.forEach(seg => {
+              seg.classList.remove('active');
+              if (seg.textContent.toLowerCase().replace(' ', '-') === config.bodyType) {
+                seg.classList.add('active');
+              }
+            });
+
+            if (config.bodyType === 'form-data' && config.formData) {
+              document.getElementById('body-form-data').style.display = 'block';
+              config.formData.forEach(row => {
+                addFormDataRow(row.key, row.value);
+              });
+            } else if (config.bodyType === 'raw' && config.rawBody) {
+              document.getElementById('body-raw').style.display = 'block';
+              document.getElementById('rawBody').value = config.rawBody;
+            }
+          }
+
+          // Load auth
+          if (config.authType) {
+            document.getElementById('authType').value = config.authType;
+            switchAuthType(config.authType);
+
+            if (config.authType === 'bearer' && config.bearerToken) {
+              document.getElementById('bearerToken').value = config.bearerToken;
+            } else if (config.authType === 'basic') {
+              if (config.basicUsername) document.getElementById('basicUsername').value = config.basicUsername;
+              if (config.basicPassword) document.getElementById('basicPassword').value = config.basicPassword;
+            } else if (config.authType === 'api-key') {
+              if (config.apiKeyName) document.getElementById('apiKeyName').value = config.apiKeyName;
+              if (config.apiKeyValue) document.getElementById('apiKeyValue').value = config.apiKeyValue;
+              if (config.apiKeyLocation) document.getElementById('apiKeyLocation').value = config.apiKeyLocation;
+            }
           }
         } catch (e) {
           console.error('Error loading config:', e);
@@ -1049,13 +1286,30 @@ async function handleRobotSettings(req, res) {
       const config = {
         url: document.getElementById('url').value,
         method: document.getElementById('method').value,
-        headers: document.getElementById('headers').value,
-        rawBody: document.getElementById('rawBody').value,
         timeout: document.getElementById('timeout').value,
-        formData: formDataRows.map(row => ({
+
+        // Headers
+        headers: headerRows.map(row => ({
           key: row.key,
           value: row.value
-        })).filter(row => row.key) // Only include rows with keys
+        })).filter(row => row.key),
+
+        // Body
+        bodyType: currentBodyType,
+        formData: currentBodyType === 'form-data' ? formDataRows.map(row => ({
+          key: row.key,
+          value: row.value
+        })).filter(row => row.key) : [],
+        rawBody: currentBodyType === 'raw' ? document.getElementById('rawBody').value : '',
+
+        // Auth
+        authType: currentAuthType,
+        bearerToken: currentAuthType === 'bearer' ? document.getElementById('bearerToken').value : '',
+        basicUsername: currentAuthType === 'basic' ? document.getElementById('basicUsername').value : '',
+        basicPassword: currentAuthType === 'basic' ? document.getElementById('basicPassword').value : '',
+        apiKeyName: currentAuthType === 'api-key' ? document.getElementById('apiKeyName').value : '',
+        apiKeyValue: currentAuthType === 'api-key' ? document.getElementById('apiKeyValue').value : '',
+        apiKeyLocation: currentAuthType === 'api-key' ? document.getElementById('apiKeyLocation').value : 'header'
       };
 
       // Validate URL
@@ -1063,6 +1317,8 @@ async function handleRobotSettings(req, res) {
         alert('URL is required');
         return;
       }
+
+      console.log('Saving config:', config);
 
       // Send back to Bitrix24
       BX24.placement.call('finish', {

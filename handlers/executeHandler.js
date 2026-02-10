@@ -61,22 +61,47 @@ async function executeHttpRequest(req, res) {
     // Parse headers if provided
     let headers = {};
     if (config.headers) {
-      try {
-        headers = JSON.parse(config.headers);
-      } catch (e) {
-        throw new Error('Invalid headers JSON format');
+      if (Array.isArray(config.headers)) {
+        // New format: array of {key, value} objects
+        config.headers.forEach(header => {
+          if (header.key) {
+            headers[header.key] = header.value || '';
+          }
+        });
+      } else if (typeof config.headers === 'string') {
+        // Legacy format: JSON string
+        try {
+          headers = JSON.parse(config.headers);
+        } catch (e) {
+          throw new Error('Invalid headers JSON format');
+        }
+      } else if (typeof config.headers === 'object') {
+        // Direct object
+        headers = config.headers;
       }
     }
 
-    // Prepare request body
+    // Handle authorization
+    if (config.authType && config.authType !== 'none') {
+      if (config.authType === 'bearer' && config.bearerToken) {
+        headers['Authorization'] = `Bearer ${config.bearerToken}`;
+      } else if (config.authType === 'basic' && config.basicUsername && config.basicPassword) {
+        const credentials = Buffer.from(`${config.basicUsername}:${config.basicPassword}`).toString('base64');
+        headers['Authorization'] = `Basic ${credentials}`;
+      } else if (config.authType === 'api-key' && config.apiKeyName && config.apiKeyValue) {
+        if (config.apiKeyLocation === 'header') {
+          headers[config.apiKeyName] = config.apiKeyValue;
+        }
+        // Query param handling would be in URL modification
+      }
+    }
+
+    // Prepare request body based on bodyType
     let requestBody = null;
 
-    // Priority 1: Raw body (if provided)
-    if (config.rawBody) {
+    if (config.bodyType === 'raw' && config.rawBody) {
       requestBody = config.rawBody;
-    }
-    // Priority 2: Form data (if provided)
-    else if (config.formData && Array.isArray(config.formData) && config.formData.length > 0) {
+    } else if (config.bodyType === 'form-data' && config.formData && Array.isArray(config.formData) && config.formData.length > 0) {
       // Build form data object
       const formDataObj = {};
       config.formData.forEach(field => {
