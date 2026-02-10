@@ -15,8 +15,8 @@ const robotConfig = {
   USE_PLACEMENT: 'Y', // Enable custom UI for settings
   PLACEMENT_HANDLER: `${HANDLER_URL}/placement/robot-settings`,
   NAME: {
-    'en': 'HTTP Request',
-    'ru': 'HTTP Запрос'
+    'en': '[SYNITY] HTTP Request',
+    'ru': '[SYNITY] HTTP Запрос'
   },
   DESCRIPTION: {
     'en': 'Makes HTTP request to external server and returns response (body, status code, headers)',

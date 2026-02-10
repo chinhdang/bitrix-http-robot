@@ -327,6 +327,73 @@ async function handleRobotSettings(req, res) {
       font-size: 13px;
     }
 
+    /* Tabs Interface */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #eef2f5;
+      margin-bottom: 24px;
+      gap: 4px;
+    }
+
+    .tab {
+      padding: 12px 20px;
+      border: none;
+      background: none;
+      color: #525c69;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .tab:hover {
+      color: #2fc6f6;
+      background: rgba(47, 198, 246, 0.05);
+    }
+
+    .tab.active {
+      color: #2fc6f6;
+      border-bottom-color: #2fc6f6;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Character Counter */
+    .char-counter {
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      font-size: 11px;
+      color: #a8adb4;
+      pointer-events: none;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-wrapper input,
+    .input-wrapper textarea {
+      padding-right: 70px;
+    }
+
+    code {
+      background: #f3f5f7;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 12px;
+      color: #2fc6f6;
+    }
+
     /* Variable Picker Modal - B24UI Style */
     .modal-overlay {
       display: none;
@@ -545,71 +612,110 @@ async function handleRobotSettings(req, res) {
 </head>
 <body>
   <div class="container">
-    <h2>HTTP Request Configuration</h2>
-
-    <div class="alert alert-info">
-      <strong>Tip:</strong> Use the ⋯ button to insert workflow variables like {{Document:TITLE}} into any field
-    </div>
-
     <form id="configForm">
-      <div class="form-group">
-        <label for="url">URL *</label>
-        <div class="input-with-button">
-          <input type="text" id="url" placeholder="https://api.example.com/endpoint" required>
-          <button type="button" class="btn-dots" onclick="showVariablePicker('url')" title="Insert variable">⋯</button>
-        </div>
-        <div class="help-text">Target URL for the HTTP request</div>
+      <!-- Tabs Navigation -->
+      <div class="tabs">
+        <button type="button" class="tab active" onclick="switchTab('request')">Request</button>
+        <button type="button" class="tab" onclick="switchTab('headers')">Headers</button>
+        <button type="button" class="tab" onclick="switchTab('body')">Body</button>
+        <button type="button" class="tab" onclick="switchTab('auth')">Authorization</button>
       </div>
 
-      <div class="form-group">
-        <label for="method">HTTP Method *</label>
-        <select id="method" required>
-          <option value="GET">GET</option>
-          <option value="POST">POST</option>
-          <option value="PUT">PUT</option>
-          <option value="DELETE">DELETE</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label for="headers">Headers (JSON)</label>
-        <div class="input-with-button">
-          <textarea id="headers" placeholder='{"Content-Type": "application/json", "Authorization": "Bearer token"}'></textarea>
-          <button type="button" class="btn-dots" onclick="showVariablePicker('headers')" title="Insert variable">⋯</button>
-        </div>
-        <div class="help-text">Request headers as JSON object</div>
-      </div>
-
-      <div class="form-data-section">
-        <div class="form-data-header">
-          <h3>📋 Form Data / Request Body</h3>
-          <button type="button" class="btn btn-primary" onclick="addFormDataRow()">+ Add Field</button>
+      <!-- Request Tab -->
+      <div id="tab-request" class="tab-content active">
+        <div class="form-group">
+          <label for="url">URL *</label>
+          <div class="input-with-button">
+            <div class="input-wrapper">
+              <input type="text" id="url" placeholder="https://api.example.com/endpoint" required maxlength="2000" oninput="updateCharCounter(this, 'url-counter')">
+              <span id="url-counter" class="char-counter">0/2000</span>
+            </div>
+            <button type="button" class="btn-dots" onclick="showVariablePicker('url')" title="Insert variable">⋯</button>
+          </div>
+          <div class="help-text">Target URL for the HTTP request</div>
         </div>
 
-        <div id="formDataContainer">
-          <div class="empty-state">
-            Click "+ Add Field" to add form data fields
+        <div class="form-group">
+          <label for="method">HTTP Method *</label>
+          <select id="method" required>
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+            <option value="PUT">PUT</option>
+            <option value="DELETE">DELETE</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="timeout">Timeout (ms)</label>
+          <input type="number" id="timeout" value="30000" min="1000" max="300000">
+          <div class="help-text">Request timeout in milliseconds (max: 300000)</div>
+        </div>
+      </div>
+
+      <!-- Headers Tab -->
+      <div id="tab-headers" class="tab-content">
+        <div class="form-group">
+          <label for="headers">Request Headers (JSON)</label>
+          <div class="input-with-button">
+            <div class="input-wrapper">
+              <textarea id="headers" placeholder='{"Content-Type": "application/json", "Authorization": "Bearer token"}' rows="6" maxlength="5000" oninput="updateCharCounter(this, 'headers-counter')"></textarea>
+              <span id="headers-counter" class="char-counter">0/5000</span>
+            </div>
+            <button type="button" class="btn-dots" onclick="showVariablePicker('headers')" title="Insert variable">⋯</button>
+          </div>
+          <div class="help-text">Request headers as JSON object</div>
+        </div>
+      </div>
+
+      <!-- Body Tab -->
+      <div id="tab-body" class="tab-content">
+        <div class="form-data-section">
+          <div class="form-data-header">
+            <h3>Form Data Fields</h3>
+            <button type="button" class="btn btn-primary" onclick="addFormDataRow()">+ Add Field</button>
+          </div>
+
+          <div id="formDataContainer">
+            <div class="empty-state">
+              Click "+ Add Field" to add form data fields
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 24px;">
+          <label for="rawBody">Raw Body (overrides Form Data if filled)</label>
+          <div class="input-with-button">
+            <div class="input-wrapper">
+              <textarea id="rawBody" placeholder='{"key": "value"} or any raw content' rows="8" maxlength="10000" oninput="updateCharCounter(this, 'rawBody-counter')"></textarea>
+              <span id="rawBody-counter" class="char-counter">0/10000</span>
+            </div>
+            <button type="button" class="btn-dots" onclick="showVariablePicker('rawBody')" title="Insert variable">⋯</button>
+          </div>
+          <div class="help-text">Use this for JSON, XML, or any raw body content</div>
+        </div>
+      </div>
+
+      <!-- Authorization Tab -->
+      <div id="tab-auth" class="tab-content">
+        <div class="alert alert-info">
+          <strong>Tip:</strong> Use Headers tab to add Authorization header, or use the ⋯ button to insert variables
+        </div>
+
+        <div class="form-group">
+          <label>Common Authorization Examples:</label>
+          <div class="help-text" style="margin-top: 12px; line-height: 1.8;">
+            <strong>Bearer Token:</strong><br>
+            <code>{"Authorization": "Bearer YOUR_TOKEN"}</code><br><br>
+            <strong>Basic Auth:</strong><br>
+            <code>{"Authorization": "Basic BASE64_CREDENTIALS"}</code><br><br>
+            <strong>API Key:</strong><br>
+            <code>{"X-API-Key": "YOUR_API_KEY"}</code>
           </div>
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="rawBody">Or use Raw Body (overrides Form Data if filled)</label>
-        <div class="input-with-button">
-          <textarea id="rawBody" placeholder='{"key": "value"} or any raw content'></textarea>
-          <button type="button" class="btn-dots" onclick="showVariablePicker('rawBody')" title="Insert variable">⋯</button>
-        </div>
-        <div class="help-text">Use this for JSON, XML, or any raw body content</div>
-      </div>
-
-      <div class="form-group">
-        <label for="timeout">Timeout (ms)</label>
-        <input type="number" id="timeout" value="30000" min="1000" max="300000">
-        <div class="help-text">Request timeout in milliseconds (max: 300000)</div>
-      </div>
-
       <div class="actions">
-        <button type="submit" class="btn btn-success">✓ Save Configuration</button>
+        <button type="submit" class="btn btn-success">Save Configuration</button>
         <button type="button" class="btn btn-secondary" onclick="BX24.closeApplication()">Cancel</button>
       </div>
     </form>
@@ -633,6 +739,38 @@ async function handleRobotSettings(req, res) {
     let formDataRows = [];
     let placementData = null;
     let availableVariables = [];
+
+    // Tab switching
+    function switchTab(tabName) {
+      // Update tab buttons
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      event.target.classList.add('active');
+
+      // Update tab content
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      document.getElementById('tab-' + tabName).classList.add('active');
+    }
+
+    // Character counter
+    function updateCharCounter(input, counterId) {
+      const counter = document.getElementById(counterId);
+      const current = input.value.length;
+      const max = input.maxLength;
+      counter.textContent = current + '/' + max;
+
+      // Color coding
+      if (current > max * 0.9) {
+        counter.style.color = '#ff5c5c';
+      } else if (current > max * 0.7) {
+        counter.style.color = '#ff9f43';
+      } else {
+        counter.style.color = '#a8adb4';
+      }
+    }
 
     // Initialize Bitrix24 App
     BX24.init(function() {
@@ -693,6 +831,13 @@ async function handleRobotSettings(req, res) {
 
       // Load saved configuration
       loadConfiguration();
+
+      // Initialize character counters
+      setTimeout(() => {
+        updateCharCounter(document.getElementById('url'), 'url-counter');
+        updateCharCounter(document.getElementById('headers'), 'headers-counter');
+        updateCharCounter(document.getElementById('rawBody'), 'rawBody-counter');
+      }, 100);
     });
 
     // Load configuration from placement options
