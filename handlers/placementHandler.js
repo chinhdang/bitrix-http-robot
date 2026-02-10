@@ -32,24 +32,26 @@ async function handleRobotSettings(req, res) {
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      padding: 20px;
-      background: #f5f5f5;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      padding: 0;
+      margin: 0;
+      background: #fafbfc;
+      color: #525c69;
     }
 
     .container {
-      max-width: 800px;
-      margin: 0 auto;
-      background: white;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      max-width: 100%;
+      margin: 0;
+      background: #ffffff;
+      padding: 24px 28px;
     }
 
     h2 {
-      margin-bottom: 20px;
-      color: #333;
-      font-size: 24px;
+      margin-bottom: 24px;
+      color: #333f50;
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
     }
 
     .form-group {
@@ -70,9 +72,10 @@ async function handleRobotSettings(req, res) {
     label {
       display: block;
       margin-bottom: 8px;
-      font-weight: 600;
-      color: #555;
-      font-size: 14px;
+      font-weight: 500;
+      color: #525c69;
+      font-size: 13px;
+      letter-spacing: -0.1px;
     }
 
     input[type="text"],
@@ -80,36 +83,39 @@ async function handleRobotSettings(req, res) {
     select,
     textarea {
       width: 100%;
-      padding: 10px 12px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
+      padding: 10px 14px;
+      border: 1px solid #dfe3e8;
+      border-radius: 8px;
       font-size: 14px;
       font-family: inherit;
-      transition: border-color 0.3s;
+      transition: all 0.2s;
+      background: #ffffff;
+      color: #333f50;
     }
 
     .btn-dots {
-      background: #f5f5f5;
-      border: 1px solid #ddd;
-      color: #666;
-      width: 38px;
-      height: 38px;
+      background: #ffffff;
+      border: 1px solid #dfe3e8;
+      color: #a8adb4;
+      width: 40px;
+      height: 40px;
       padding: 0;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 18px;
-      font-weight: bold;
+      font-weight: normal;
       cursor: pointer;
-      border-radius: 4px;
+      border-radius: 8px;
       transition: all 0.2s;
       flex-shrink: 0;
     }
 
     .btn-dots:hover {
-      background: #e8e8e8;
+      background: #2fc6f6;
       border-color: #2fc6f6;
-      color: #2fc6f6;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(47, 198, 246, 0.25);
     }
 
     input:focus,
@@ -117,6 +123,12 @@ async function handleRobotSettings(req, res) {
     textarea:focus {
       outline: none;
       border-color: #2fc6f6;
+      box-shadow: 0 0 0 3px rgba(47, 198, 246, 0.08);
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: #a8adb4;
     }
 
     textarea {
@@ -125,10 +137,10 @@ async function handleRobotSettings(req, res) {
     }
 
     .form-data-section {
-      border: 1px solid #e0e0e0;
-      border-radius: 6px;
-      padding: 20px;
-      background: #fafafa;
+      border: 1px solid #eef2f5;
+      border-radius: 10px;
+      padding: 24px;
+      background: #fafbfc;
       margin-bottom: 20px;
     }
 
@@ -136,12 +148,14 @@ async function handleRobotSettings(req, res) {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 15px;
+      margin-bottom: 18px;
     }
 
     .form-data-header h3 {
-      font-size: 16px;
-      color: #333;
+      font-size: 15px;
+      font-weight: 600;
+      color: #333f50;
+      letter-spacing: -0.2px;
     }
 
     .form-data-row {
@@ -157,94 +171,112 @@ async function handleRobotSettings(req, res) {
     }
 
     .btn {
-      padding: 8px 16px;
+      padding: 10px 18px;
       border: none;
-      border-radius: 4px;
-      font-size: 14px;
+      border-radius: 8px;
+      font-size: 13px;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.3s;
+      transition: all 0.2s;
+      letter-spacing: -0.1px;
     }
 
     .btn-primary {
       background: #2fc6f6;
       color: white;
+      box-shadow: 0 2px 4px rgba(47, 198, 246, 0.2);
     }
 
     .btn-primary:hover {
       background: #1fb5e5;
+      box-shadow: 0 4px 8px rgba(47, 198, 246, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
     }
 
     .btn-success {
-      background: #52c41a;
+      background: #57c489;
       color: white;
-      padding: 12px 24px;
-      font-size: 16px;
+      padding: 12px 28px;
+      font-size: 14px;
+      box-shadow: 0 2px 4px rgba(87, 196, 137, 0.2);
     }
 
     .btn-success:hover {
-      background: #3db00f;
+      background: #48b57a;
+      box-shadow: 0 4px 8px rgba(87, 196, 137, 0.3);
+      transform: translateY(-1px);
     }
 
     .btn-danger {
-      background: #ff4d4f;
+      background: #ff5c5c;
       color: white;
-      width: 36px;
-      height: 36px;
+      width: 40px;
+      height: 40px;
       padding: 0;
       display: flex;
       align-items: center;
       justify-content: center;
+      border-radius: 8px;
     }
 
     .btn-danger:hover {
-      background: #ff1f21;
+      background: #ff4747;
+      box-shadow: 0 2px 8px rgba(255, 92, 92, 0.3);
     }
 
     .btn-secondary {
-      background: #f0f0f0;
-      color: #666;
+      background: #f3f5f7;
+      color: #525c69;
+      border: 1px solid #dfe3e8;
     }
 
     .btn-secondary:hover {
-      background: #e0e0e0;
+      background: #e8ebed;
+      border-color: #d0d5db;
     }
 
     .actions {
       display: flex;
-      gap: 10px;
-      margin-top: 30px;
-      padding-top: 20px;
-      border-top: 1px solid #e0e0e0;
+      gap: 12px;
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid #eef2f5;
     }
 
     .help-text {
       font-size: 12px;
-      color: #999;
-      margin-top: 5px;
+      color: #a8adb4;
+      margin-top: 6px;
+      line-height: 1.5;
     }
 
     .alert {
-      padding: 12px 16px;
-      border-radius: 4px;
-      margin-bottom: 20px;
-      font-size: 14px;
+      padding: 14px 18px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      font-size: 13px;
+      line-height: 1.6;
+      border-left: 3px solid;
     }
 
     .alert-info {
-      background: #e6f7ff;
-      border: 1px solid #91d5ff;
-      color: #1890ff;
+      background: #e8f7ff;
+      border-left-color: #2fc6f6;
+      color: #0087c7;
     }
 
     .empty-state {
       text-align: center;
-      padding: 20px;
-      color: #999;
-      font-size: 14px;
+      padding: 32px 20px;
+      color: #a8adb4;
+      font-size: 13px;
     }
 
-    /* Variable Picker Modal */
+    /* Variable Picker Modal - Bitrix24 Style */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -252,83 +284,110 @@ async function handleRobotSettings(req, res) {
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 1000;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 10000;
       justify-content: center;
       align-items: center;
+      animation: fadeIn 0.2s ease;
     }
 
     .modal-overlay.active {
       display: flex;
     }
 
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     .modal-content {
-      background: white;
-      border-radius: 8px;
-      width: 95%;
-      max-width: 900px;
-      max-height: 85vh;
+      background: #ffffff;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 720px;
+      max-height: 80vh;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+      animation: slideUp 0.3s ease;
     }
 
     .modal-header {
-      padding: 16px 20px;
-      border-bottom: 1px solid #e8e8e8;
+      padding: 24px 28px 20px;
+      border-bottom: 1px solid #eef2f5;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: #fafafa;
     }
 
     .modal-header h3 {
       margin: 0;
-      font-size: 16px;
+      font-size: 18px;
       font-weight: 600;
-      color: #333;
+      color: #525c69;
+      letter-spacing: -0.2px;
     }
 
     .modal-close {
       background: none;
       border: none;
-      font-size: 24px;
-      color: #999;
+      font-size: 28px;
+      color: #a8adb4;
       cursor: pointer;
       padding: 0;
-      width: 30px;
-      height: 30px;
+      width: 32px;
+      height: 32px;
       display: flex;
       align-items: center;
       justify-content: center;
+      border-radius: 6px;
+      transition: all 0.2s;
     }
 
     .modal-close:hover {
-      color: #333;
+      background: #f3f5f7;
+      color: #535c69;
     }
 
     .modal-body {
-      padding: 20px;
+      padding: 24px 28px 28px;
       overflow-y: auto;
       flex: 1;
+      background: #fafbfc;
     }
 
     .modal-search {
       width: 100%;
-      padding: 10px 14px;
-      border: 1px solid #e0e0e0;
-      border-radius: 4px;
+      padding: 11px 16px;
+      border: 1px solid #dfe3e8;
+      border-radius: 8px;
       font-size: 14px;
-      margin-bottom: 16px;
-      background: #fafafa;
+      margin-bottom: 20px;
+      background: #ffffff;
       transition: all 0.2s;
+      color: #333;
     }
 
     .modal-search:focus {
       outline: none;
       border-color: #2fc6f6;
-      background: white;
-      box-shadow: 0 0 0 3px rgba(47, 198, 246, 0.1);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(47, 198, 246, 0.08);
+    }
+
+    .modal-search::placeholder {
+      color: #a8adb4;
     }
 
     .variable-list {
@@ -336,50 +395,54 @@ async function handleRobotSettings(req, res) {
       padding: 0;
       margin: 0;
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 8px;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px;
     }
 
     .variable-item {
-      padding: 10px 14px;
-      border: 1px solid #e0e0e0;
-      border-radius: 4px;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 8px;
       cursor: pointer;
-      transition: all 0.15s;
-      background: #fafafa;
-      font-size: 14px;
-      color: #333;
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      background: #ffffff;
+      font-size: 13px;
+      font-weight: 500;
+      color: #525c69;
       text-align: left;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      line-height: 1.4;
     }
 
     .variable-item:hover {
-      background: #e6f7ff;
-      border-color: #2fc6f6;
-      color: #2fc6f6;
-      transform: translateY(-1px);
-      box-shadow: 0 2px 4px rgba(47, 198, 246, 0.2);
+      background: #2fc6f6;
+      color: #ffffff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(47, 198, 246, 0.25);
     }
 
     .variable-item:active {
       transform: translateY(0);
+      box-shadow: 0 2px 6px rgba(47, 198, 246, 0.3);
     }
 
     .no-variables {
       text-align: center;
-      padding: 40px 20px;
-      color: #999;
+      padding: 60px 20px;
+      color: #a8adb4;
+      font-size: 14px;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>🚀 HTTP Request Configuration</h2>
+    <h2>HTTP Request Configuration</h2>
 
     <div class="alert alert-info">
-      <strong>Pro Tip:</strong> You can use Bitrix24 variables like {{Document:TITLE}} in any field!
+      <strong>Tip:</strong> Use the ⋯ button to insert workflow variables like {{Document:TITLE}} into any field
     </div>
 
     <form id="configForm">
@@ -450,11 +513,11 @@ async function handleRobotSettings(req, res) {
   <div class="modal-overlay" id="variableModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Select Variable</h3>
+        <h3>Insert Variable</h3>
         <button class="modal-close" onclick="closeVariablePicker()">×</button>
       </div>
       <div class="modal-body">
-        <input type="text" class="modal-search" id="variableSearch" placeholder="🔍 Type to search fields..." onkeyup="filterVariables()">
+        <input type="text" class="modal-search" id="variableSearch" placeholder="Search fields..." onkeyup="filterVariables()">
         <ul class="variable-list" id="variableList"></ul>
       </div>
     </div>
