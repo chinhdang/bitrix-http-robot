@@ -598,24 +598,20 @@ async function handleRobotSettings(req, res) {
     // Show variable picker
     function showVariablePicker(fieldId) {
       currentFieldId = fieldId;
+      console.log('Opening variable picker for field:', fieldId);
 
-      // Try to use native Bitrix24 field picker if available
-      BX24.placement.call('showFieldPicker', { fieldId: fieldId }, function(result) {
-        console.log('Field picker result:', result);
-        if (result && result.value) {
-          insertVariableIntoField(fieldId, result.value);
-          return;
-        }
-
-        // If native picker not available, show custom picker
-        showCustomVariablePicker();
-      });
+      // Show custom variable picker directly
+      showCustomVariablePicker();
     }
 
     // Show custom variable picker modal
     function showCustomVariablePicker() {
+      console.log('showCustomVariablePicker called');
+      console.log('Available variables:', availableVariables);
+
       // Default variables if none loaded yet
       if (availableVariables.length === 0) {
+        console.log('No variables loaded, using defaults');
         availableVariables = [
           { code: 'ID', name: 'Document ID', template: '{{Document:ID}}' },
           { code: 'TITLE', name: 'Document Title', template: '{{Document:TITLE}}' },
@@ -628,9 +624,18 @@ async function handleRobotSettings(req, res) {
       renderVariableList(availableVariables);
 
       // Show modal
-      document.getElementById('variableModal').classList.add('active');
-      document.getElementById('variableSearch').value = '';
-      document.getElementById('variableSearch').focus();
+      const modal = document.getElementById('variableModal');
+      if (modal) {
+        console.log('Showing modal');
+        modal.classList.add('active');
+        const searchInput = document.getElementById('variableSearch');
+        if (searchInput) {
+          searchInput.value = '';
+          searchInput.focus();
+        }
+      } else {
+        console.error('Modal element not found!');
+      }
     }
 
     // Render variable list
@@ -673,14 +678,17 @@ async function handleRobotSettings(req, res) {
       currentFieldId = null;
     }
 
-    // Close modal when clicking outside
-    document.addEventListener('DOMContentLoaded', function() {
-      document.getElementById('variableModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-          closeVariablePicker();
-        }
-      });
-    });
+    // Close modal when clicking outside (set up immediately since script is at bottom)
+    setTimeout(function() {
+      const modal = document.getElementById('variableModal');
+      if (modal) {
+        modal.addEventListener('click', function(e) {
+          if (e.target === this) {
+            closeVariablePicker();
+          }
+        });
+      }
+    }, 0);
 
     // Insert variable into field
     function insertVariableIntoField(fieldId, variable) {
