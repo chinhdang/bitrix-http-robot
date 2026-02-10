@@ -4,11 +4,13 @@ require('dotenv').config();
 const BITRIX24_DOMAIN = process.env.BITRIX24_DOMAIN;
 const ACCESS_TOKEN = process.env.BITRIX24_ACCESS_TOKEN;
 const HANDLER_URL = process.env.HANDLER_URL;
+const USER_ID = process.env.BITRIX24_USER_ID || '1'; // Default to user 1 (admin)
 
 // Robot/Activity configuration
 const robotConfig = {
   CODE: 'http_request_robot',
   HANDLER: `${HANDLER_URL}/bitrix-handler/execute`,
+  AUTH_USER_ID: parseInt(USER_ID), // User whose permissions will be used
   USE_SUBSCRIPTION: 'Y', // CRITICAL: Makes Bitrix24 wait for bizproc.event.send
   NAME: {
     'en': 'HTTP Request',
@@ -146,15 +148,20 @@ async function installRobot() {
     console.log(`Handler URL: ${robotConfig.HANDLER}`);
 
     const response = await axios.post(
-      `https://${BITRIX24_DOMAIN}/rest/bizproc.robot.add`,
-      {
-        ...robotConfig,
-        auth: ACCESS_TOKEN
-      }
+      `https://${BITRIX24_DOMAIN}/rest/${USER_ID}/${ACCESS_TOKEN}/bizproc.robot.add`,
+      robotConfig
     );
 
     if (response.data.error) {
       console.error('❌ Robot installation failed:', response.data.error_description);
+
+      if (response.data.error === 'ACCESS_DENIED' || response.data.error === 'invalid_token') {
+        console.error('\n⚠️  IMPORTANT: bizproc.robot.add requires Application Context!');
+        console.error('   You cannot use a regular inbound webhook.');
+        console.error('   Please create a Local Application in Bitrix24:');
+        console.error('   Settings → Developer resources → Other → Local application\n');
+      }
+
       return false;
     }
 
@@ -177,15 +184,20 @@ async function installActivity() {
     console.log(`Handler URL: ${robotConfig.HANDLER}`);
 
     const response = await axios.post(
-      `https://${BITRIX24_DOMAIN}/rest/bizproc.activity.add`,
-      {
-        ...robotConfig,
-        auth: ACCESS_TOKEN
-      }
+      `https://${BITRIX24_DOMAIN}/rest/${USER_ID}/${ACCESS_TOKEN}/bizproc.activity.add`,
+      robotConfig
     );
 
     if (response.data.error) {
       console.error('❌ Activity installation failed:', response.data.error_description);
+
+      if (response.data.error === 'ACCESS_DENIED' || response.data.error === 'invalid_token') {
+        console.error('\n⚠️  IMPORTANT: bizproc.activity.add requires Application Context!');
+        console.error('   You cannot use a regular inbound webhook.');
+        console.error('   Please create a Local Application in Bitrix24:');
+        console.error('   Settings → Developer resources → Other → Local application\n');
+      }
+
       return false;
     }
 
