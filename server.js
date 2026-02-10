@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const { executeHttpRequest } = require('./handlers/executeHandler');
 const { handleInstall, handleUninstall } = require('./handlers/installHandler');
+const { handleRobotSettings } = require('./handlers/placementHandler');
 const logger = require('./utils/logger');
 require('dotenv').config();
 
@@ -29,6 +30,9 @@ app.post('/bitrix-handler/execute', executeHttpRequest);
 // Installation handlers (optional, for app lifecycle management)
 app.post('/bitrix-handler/install', handleInstall);
 app.post('/bitrix-handler/uninstall', handleUninstall);
+
+// Placement handler for custom robot settings UI
+app.post('/placement/robot-settings', handleRobotSettings);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

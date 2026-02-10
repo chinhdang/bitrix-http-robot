@@ -47,23 +47,76 @@ async function executeHttpRequest(req, res) {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
     }
 
+    // Check if this is from placement UI (has config property)
+    let config = properties;
+    if (properties.config) {
+      try {
+        config = JSON.parse(properties.config);
+        logger.info('Using placement UI config', { config });
+      } catch (e) {
+        logger.warn('Failed to parse placement config, using direct properties');
+      }
+    }
+
     // Parse headers if provided
     let headers = {};
-    if (properties.headers) {
+    if (config.headers) {
       try {
-        headers = JSON.parse(properties.headers);
+        headers = JSON.parse(config.headers);
       } catch (e) {
         throw new Error('Invalid headers JSON format');
       }
     }
 
+    // Prepare request body
+    let requestBody = null;
+
+    // Priority 1: Raw body (if provided)
+    if (config.rawBody) {
+      requestBody = config.rawBody;
+    }
+    // Priority 2: Form data (if provided)
+    else if (config.formData && Array.isArray(config.formData) && config.formData.length > 0) {
+      // Build form data object
+      const formDataObj = {};
+      config.formData.forEach(field => {
+        if (field.key) {
+          formDataObj[field.key] = field.value || '';
+        }
+      });
+
+      // Check Content-Type to determine format
+      const contentType = headers['Content-Type'] || headers['content-type'] || '';
+
+      if (contentType.includes('application/x-www-form-urlencoded')) {
+        // Convert to URL-encoded format
+        const params = new URLSearchParams();
+        Object.keys(formDataObj).forEach(key => {
+          params.append(key, formDataObj[key]);
+        });
+        requestBody = params.toString();
+      } else {
+        // Default to JSON
+        requestBody = JSON.stringify(formDataObj);
+        if (!headers['Content-Type']) {
+          headers['Content-Type'] = 'application/json';
+        }
+      }
+
+      logger.debug('Built request body from form data', { formDataObj, requestBody });
+    }
+    // Priority 3: Legacy body property
+    else if (config.body) {
+      requestBody = config.body;
+    }
+
     // Prepare HTTP request configuration
     const requestConfig = {
-      url: properties.url,
-      method: properties.method || 'GET',
+      url: config.url,
+      method: config.method || 'GET',
       headers: headers,
-      body: properties.body || null,
-      timeout: parseInt(properties.timeout) || 30000
+      body: requestBody,
+      timeout: parseInt(config.timeout) || 30000
     };
 
     logger.debug('Making HTTP request', requestConfig);

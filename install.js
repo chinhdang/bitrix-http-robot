@@ -12,6 +12,8 @@ const robotConfig = {
   HANDLER: `${HANDLER_URL}/bitrix-handler/execute`,
   AUTH_USER_ID: parseInt(USER_ID), // User whose permissions will be used
   USE_SUBSCRIPTION: 'Y', // CRITICAL: Makes Bitrix24 wait for bizproc.event.send
+  USE_PLACEMENT: 'Y', // Enable custom UI for settings
+  PLACEMENT_HANDLER: `${HANDLER_URL}/placement/robot-settings`,
   NAME: {
     'en': 'HTTP Request',
     'ru': 'HTTP Запрос'
