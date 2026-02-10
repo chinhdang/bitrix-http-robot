@@ -148,7 +148,7 @@ async function installRobot() {
     console.log(`Handler URL: ${robotConfig.HANDLER}`);
 
     const response = await axios.post(
-      `https://${BITRIX24_DOMAIN}/rest/${USER_ID}/${ACCESS_TOKEN}/bizproc.robot.add`,
+      `https://${BITRIX24_DOMAIN}/rest/bizproc.robot.add?auth=${ACCESS_TOKEN}`,
       robotConfig
     );
 
@@ -184,7 +184,7 @@ async function installActivity() {
     console.log(`Handler URL: ${robotConfig.HANDLER}`);
 
     const response = await axios.post(
-      `https://${BITRIX24_DOMAIN}/rest/${USER_ID}/${ACCESS_TOKEN}/bizproc.activity.add`,
+      `https://${BITRIX24_DOMAIN}/rest/bizproc.activity.add?auth=${ACCESS_TOKEN}`,
       robotConfig
     );
 
