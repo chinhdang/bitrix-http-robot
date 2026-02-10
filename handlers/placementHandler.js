@@ -1210,11 +1210,11 @@ async function handleRobotSettings(req, res) {
       console.log('Full placement info:', JSON.stringify(placementOptions, null, 2));
 
       // If we have saved data, load it
-      // Check for config in options.config (saved property value)
-      if (placementOptions.options && placementOptions.options.config) {
+      // Check for config in options.current_values.config (saved property value)
+      if (placementOptions.options && placementOptions.options.current_values && placementOptions.options.current_values.config) {
         try {
-          console.log('Loading config from options.config:', placementOptions.options.config);
-          const config = JSON.parse(placementOptions.options.config);
+          console.log('Loading config from current_values.config:', placementOptions.options.current_values.config);
+          const config = JSON.parse(placementOptions.options.current_values.config);
           console.log('Parsed config:', config);
 
           if (config.url) document.getElementById('url').value = config.url;
@@ -1561,10 +1561,18 @@ async function handleRobotSettings(req, res) {
 
       console.log('Saving config:', config);
 
+      // Prepare data for Bitrix24
+      const configString = JSON.stringify(config);
+      console.log('Config string to save:', configString);
+      console.log('Config string length:', configString.length);
+
       // Send back to Bitrix24
       try {
+        console.log('Calling BX24.placement.call("finish", {config: ...})');
         BX24.placement.call('finish', {
-          config: JSON.stringify(config)
+          config: configString
+        }, function(result) {
+          console.log('Placement finish result:', result);
         });
       } catch (error) {
         console.error('Error saving config:', error);
