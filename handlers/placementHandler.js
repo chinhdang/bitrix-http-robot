@@ -1207,11 +1207,15 @@ async function handleRobotSettings(req, res) {
     function loadConfiguration() {
       const placementOptions = BX24.placement.info();
       console.log('Placement options:', placementOptions);
+      console.log('Full placement info:', JSON.stringify(placementOptions, null, 2));
 
       // If we have saved data, load it
-      if (placementOptions.options) {
+      // Check for config in options.config (saved property value)
+      if (placementOptions.options && placementOptions.options.config) {
         try {
-          const config = JSON.parse(placementOptions.options);
+          console.log('Loading config from options.config:', placementOptions.options.config);
+          const config = JSON.parse(placementOptions.options.config);
+          console.log('Parsed config:', config);
 
           if (config.url) document.getElementById('url').value = config.url;
           if (config.method) document.getElementById('method').value = config.method;
