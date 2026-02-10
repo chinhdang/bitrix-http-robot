@@ -66,8 +66,12 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  logger.info(`Bitrix24 HTTP Request Robot handler running on port ${PORT}`, {
+// Bind to 0.0.0.0 for Railway/Docker compatibility
+const HOST = process.env.HOST || '0.0.0.0';
+
+app.listen(PORT, HOST, () => {
+  logger.info(`Bitrix24 HTTP Request Robot handler running on ${HOST}:${PORT}`, {
+    host: HOST,
     port: PORT,
     nodeEnv: process.env.NODE_ENV || 'development'
   });
