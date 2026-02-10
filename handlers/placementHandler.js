@@ -86,9 +86,10 @@ async function handleRobotSettings(req, res) {
       padding: 10px 14px;
       border: 1px solid #dfe3e8;
       border-radius: 8px;
-      font-size: 14px;
+      font-size: 13px;
+      line-height: 1.5;
       font-family: inherit;
-      transition: all 0.2s;
+      transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
       background: #ffffff;
       color: #333f50;
     }
@@ -107,7 +108,7 @@ async function handleRobotSettings(req, res) {
       font-weight: normal;
       cursor: pointer;
       border-radius: 8px;
-      transition: all 0.2s;
+      transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
       flex-shrink: 0;
     }
 
@@ -115,7 +116,14 @@ async function handleRobotSettings(req, res) {
       background: #2fc6f6;
       border-color: #2fc6f6;
       color: #ffffff;
-      box-shadow: 0 2px 8px rgba(47, 198, 246, 0.25);
+      box-shadow:
+        0 0 0 1px #2fc6f6,
+        0 4px 6px -1px rgba(47, 198, 246, 0.3);
+      transform: scale(1.05);
+    }
+
+    .btn-dots:active {
+      transform: scale(0.98);
     }
 
     input:focus,
@@ -123,7 +131,15 @@ async function handleRobotSettings(req, res) {
     textarea:focus {
       outline: none;
       border-color: #2fc6f6;
-      box-shadow: 0 0 0 3px rgba(47, 198, 246, 0.08);
+      box-shadow:
+        0 0 0 1px #2fc6f6,
+        0 0 0 4px rgba(47, 198, 246, 0.1);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      input, select, textarea, .btn, .btn-dots, .variable-item {
+        transition-duration: 1ms;
+      }
     }
 
     input::placeholder,
@@ -177,42 +193,60 @@ async function handleRobotSettings(req, res) {
       font-size: 13px;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
       letter-spacing: -0.1px;
+      line-height: 1.5;
     }
 
     .btn-primary {
-      background: #2fc6f6;
+      background: linear-gradient(180deg, #2fc6f6 0%, #1fb5e5 100%);
       color: white;
-      box-shadow: 0 2px 4px rgba(47, 198, 246, 0.2);
+      box-shadow:
+        0 0 0 1px rgba(47, 198, 246, 0.1),
+        0 1px 2px 0 rgba(0, 0, 0, 0.05);
     }
 
     .btn-primary:hover {
-      background: #1fb5e5;
-      box-shadow: 0 4px 8px rgba(47, 198, 246, 0.3);
+      background: linear-gradient(180deg, #1fb5e5 0%, #0ea5d5 100%);
+      box-shadow:
+        0 0 0 1px rgba(47, 198, 246, 0.2),
+        0 4px 6px -1px rgba(47, 198, 246, 0.2),
+        0 2px 4px -2px rgba(47, 198, 246, 0.15);
       transform: translateY(-1px);
     }
 
     .btn-primary:active {
       transform: translateY(0);
+      box-shadow:
+        0 0 0 1px rgba(47, 198, 246, 0.2),
+        0 1px 2px 0 rgba(0, 0, 0, 0.05);
     }
 
     .btn-success {
-      background: #57c489;
+      background: linear-gradient(180deg, #57c489 0%, #48b57a 100%);
       color: white;
       padding: 12px 28px;
-      font-size: 14px;
-      box-shadow: 0 2px 4px rgba(87, 196, 137, 0.2);
+      font-size: 13px;
+      box-shadow:
+        0 0 0 1px rgba(87, 196, 137, 0.1),
+        0 1px 2px 0 rgba(0, 0, 0, 0.05);
     }
 
     .btn-success:hover {
-      background: #48b57a;
-      box-shadow: 0 4px 8px rgba(87, 196, 137, 0.3);
+      background: linear-gradient(180deg, #48b57a 0%, #39a66b 100%);
+      box-shadow:
+        0 0 0 1px rgba(87, 196, 137, 0.2),
+        0 4px 6px -1px rgba(87, 196, 137, 0.2),
+        0 2px 4px -2px rgba(87, 196, 137, 0.15);
       transform: translateY(-1px);
     }
 
+    .btn-success:active {
+      transform: translateY(0);
+    }
+
     .btn-danger {
-      background: #ff5c5c;
+      background: linear-gradient(180deg, #ff5c5c 0%, #ff4747 100%);
       color: white;
       width: 40px;
       height: 40px;
@@ -221,22 +255,39 @@ async function handleRobotSettings(req, res) {
       align-items: center;
       justify-content: center;
       border-radius: 8px;
+      border: none;
+      box-shadow:
+        0 0 0 1px rgba(255, 92, 92, 0.1),
+        0 1px 2px 0 rgba(0, 0, 0, 0.05);
     }
 
     .btn-danger:hover {
-      background: #ff4747;
-      box-shadow: 0 2px 8px rgba(255, 92, 92, 0.3);
+      background: linear-gradient(180deg, #ff4747 0%, #ff3232 100%);
+      box-shadow:
+        0 0 0 1px rgba(255, 92, 92, 0.2),
+        0 4px 6px -1px rgba(255, 92, 92, 0.3);
+      transform: scale(1.05);
+    }
+
+    .btn-danger:active {
+      transform: scale(0.98);
     }
 
     .btn-secondary {
-      background: #f3f5f7;
+      background: #ffffff;
       color: #525c69;
       border: 1px solid #dfe3e8;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
     }
 
     .btn-secondary:hover {
-      background: #e8ebed;
+      background: #f8f9fa;
       border-color: #d0d5db;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .btn-secondary:active {
+      background: #f3f5f7;
     }
 
     .actions {
@@ -276,51 +327,74 @@ async function handleRobotSettings(req, res) {
       font-size: 13px;
     }
 
-    /* Variable Picker Modal - Bitrix24 Style */
+    /* Variable Picker Modal - B24UI Style */
     .modal-overlay {
       display: none;
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      inset: 0;
       background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px);
       z-index: 10000;
       justify-content: center;
       align-items: center;
-      animation: fadeIn 0.2s ease;
+      animation: overlayShow 200ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .modal-overlay {
+        backdrop-filter: none;
+        animation-duration: 1ms;
+      }
     }
 
     .modal-overlay.active {
       display: flex;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    @keyframes slideUp {
+    @keyframes overlayShow {
       from {
         opacity: 0;
-        transform: translateY(20px);
       }
       to {
         opacity: 1;
-        transform: translateY(0);
+      }
+    }
+
+    @keyframes contentShow {
+      from {
+        opacity: 0;
+        transform: translate(-50%, -48%) scale(0.96);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
       }
     }
 
     .modal-content {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       background: #ffffff;
       border-radius: 12px;
-      width: 90%;
+      width: 90vw;
       max-width: 720px;
-      max-height: 80vh;
+      max-height: 85vh;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-      animation: slideUp 0.3s ease;
+      box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.05),
+        0 10px 15px -3px rgba(0, 0, 0, 0.1),
+        0 4px 6px -4px rgba(0, 0, 0, 0.1);
+      animation: contentShow 200ms cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .modal-content {
+        animation-duration: 1ms;
+      }
     }
 
     .modal-header {
@@ -363,8 +437,27 @@ async function handleRobotSettings(req, res) {
     .modal-body {
       padding: 24px 28px 28px;
       overflow-y: auto;
+      overflow-x: hidden;
       flex: 1;
       background: #fafbfc;
+    }
+
+    /* Thin scrollbar like B24UI */
+    .modal-body::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .modal-body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .modal-body::-webkit-scrollbar-thumb {
+      background: #d0d5db;
+      border-radius: 3px;
+    }
+
+    .modal-body::-webkit-scrollbar-thumb:hover {
+      background: #a8adb4;
     }
 
     .modal-search {
@@ -372,22 +465,27 @@ async function handleRobotSettings(req, res) {
       padding: 11px 16px;
       border: 1px solid #dfe3e8;
       border-radius: 8px;
-      font-size: 14px;
+      font-size: 13px;
+      line-height: 1.5;
       margin-bottom: 20px;
       background: #ffffff;
-      transition: all 0.2s;
-      color: #333;
+      transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+      color: #333f50;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
     }
 
     .modal-search:focus {
       outline: none;
       border-color: #2fc6f6;
       background: #ffffff;
-      box-shadow: 0 0 0 3px rgba(47, 198, 246, 0.08);
+      box-shadow:
+        0 0 0 1px #2fc6f6,
+        0 0 0 4px rgba(47, 198, 246, 0.1);
     }
 
     .modal-search::placeholder {
       color: #a8adb4;
+      opacity: 0.8;
     }
 
     .variable-list {
@@ -401,10 +499,10 @@ async function handleRobotSettings(req, res) {
 
     .variable-item {
       padding: 12px 16px;
-      border: none;
+      border: 1px solid #eef2f5;
       border-radius: 8px;
       cursor: pointer;
-      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
       background: #ffffff;
       font-size: 13px;
       font-weight: 500;
@@ -413,20 +511,28 @@ async function handleRobotSettings(req, res) {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-      line-height: 1.4;
+      box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.02),
+        0 1px 2px rgba(0, 0, 0, 0.04);
+      line-height: 1.5;
     }
 
     .variable-item:hover {
-      background: #2fc6f6;
+      background: linear-gradient(180deg, #2fc6f6 0%, #1fb5e5 100%);
+      border-color: transparent;
       color: #ffffff;
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(47, 198, 246, 0.25);
+      box-shadow:
+        0 0 0 1px rgba(47, 198, 246, 0.3),
+        0 4px 6px -1px rgba(47, 198, 246, 0.3),
+        0 2px 4px -2px rgba(47, 198, 246, 0.2);
     }
 
     .variable-item:active {
       transform: translateY(0);
-      box-shadow: 0 2px 6px rgba(47, 198, 246, 0.3);
+      box-shadow:
+        0 0 0 1px rgba(47, 198, 246, 0.3),
+        0 2px 4px rgba(47, 198, 246, 0.3);
     }
 
     .no-variables {
