@@ -265,25 +265,27 @@ async function handleRobotSettings(req, res) {
     .modal-content {
       background: white;
       border-radius: 8px;
-      width: 90%;
-      max-width: 600px;
-      max-height: 80vh;
+      width: 95%;
+      max-width: 900px;
+      max-height: 85vh;
       display: flex;
       flex-direction: column;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     }
 
     .modal-header {
-      padding: 20px;
-      border-bottom: 1px solid #e0e0e0;
+      padding: 16px 20px;
+      border-bottom: 1px solid #e8e8e8;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      background: #fafafa;
     }
 
     .modal-header h3 {
       margin: 0;
-      font-size: 18px;
+      font-size: 16px;
+      font-weight: 600;
       color: #333;
     }
 
@@ -313,43 +315,56 @@ async function handleRobotSettings(req, res) {
 
     .modal-search {
       width: 100%;
-      padding: 10px 12px;
-      border: 1px solid #ddd;
+      padding: 10px 14px;
+      border: 1px solid #e0e0e0;
       border-radius: 4px;
       font-size: 14px;
-      margin-bottom: 15px;
+      margin-bottom: 16px;
+      background: #fafafa;
+      transition: all 0.2s;
+    }
+
+    .modal-search:focus {
+      outline: none;
+      border-color: #2fc6f6;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(47, 198, 246, 0.1);
     }
 
     .variable-list {
       list-style: none;
       padding: 0;
       margin: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 8px;
     }
 
     .variable-item {
-      padding: 12px;
+      padding: 10px 14px;
       border: 1px solid #e0e0e0;
       border-radius: 4px;
-      margin-bottom: 8px;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.15s;
+      background: #fafafa;
+      font-size: 14px;
+      color: #333;
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .variable-item:hover {
-      background: #f0f9ff;
+      background: #e6f7ff;
       border-color: #2fc6f6;
-    }
-
-    .variable-item-name {
-      font-weight: 600;
-      color: #333;
-      margin-bottom: 4px;
-    }
-
-    .variable-item-code {
-      font-size: 12px;
       color: #2fc6f6;
-      font-family: 'Courier New', monospace;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(47, 198, 246, 0.2);
+    }
+
+    .variable-item:active {
+      transform: translateY(0);
     }
 
     .no-variables {
@@ -435,11 +450,11 @@ async function handleRobotSettings(req, res) {
   <div class="modal-overlay" id="variableModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>📋 Select Variable</h3>
+        <h3>Select Variable</h3>
         <button class="modal-close" onclick="closeVariablePicker()">×</button>
       </div>
       <div class="modal-body">
-        <input type="text" class="modal-search" id="variableSearch" placeholder="Search variables..." onkeyup="filterVariables()">
+        <input type="text" class="modal-search" id="variableSearch" placeholder="🔍 Type to search fields..." onkeyup="filterVariables()">
         <ul class="variable-list" id="variableList"></ul>
       </div>
     </div>
@@ -648,9 +663,8 @@ async function handleRobotSettings(req, res) {
       }
 
       listContainer.innerHTML = variables.map(v => \`
-        <li class="variable-item" onclick="selectVariable('\${v.template}')">
-          <div class="variable-item-name">\${v.name}</div>
-          <div class="variable-item-code">\${v.template}</div>
+        <li class="variable-item" onclick="selectVariable('\${v.template}')" title="\${v.template}">
+          \${v.name}
         </li>
       \`).join('');
     }
