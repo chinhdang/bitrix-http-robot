@@ -69,7 +69,7 @@ app.use((err, req, res, next) => {
 // Bind to 0.0.0.0 for Railway/Docker compatibility
 const HOST = process.env.HOST || '0.0.0.0';
 
-app.listen(PORT, HOST, () => {
+const server = app.listen(PORT, HOST, () => {
   logger.info(`Bitrix24 HTTP Request Robot handler running on ${HOST}:${PORT}`, {
     host: HOST,
     port: PORT,
