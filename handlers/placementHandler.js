@@ -25,6 +25,50 @@ async function handleRobotSettings(req, res) {
   <title>HTTP Request Configuration</title>
   <script src="//api.bitrix24.com/api/v1/"></script>
   <style>
+    /* B24UI Design Tokens - CSS Custom Properties for theming */
+    :root {
+      /* Colors */
+      --color-primary: #2fc6f6;
+      --color-primary-dark: #1fb5e5;
+      --color-primary-darker: #0ea5d5;
+      --color-danger: #ff5c5c;
+      --color-danger-dark: #ff4747;
+      --color-danger-darker: #ff3232;
+      --color-warning: #ff9f43;
+      --color-text: #333f50;
+      --color-text-secondary: #525c69;
+      --color-text-muted: #a8adb4;
+      --color-border: #dfe3e8;
+      --color-border-light: #eef2f5;
+      --color-bg: #ffffff;
+      --color-bg-secondary: #fafbfc;
+      --color-bg-tertiary: #f3f5f7;
+
+      /* Spacing */
+      --space-xs: 6px;
+      --space-sm: 10px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+
+      /* Radius */
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 10px;
+      --radius-xl: 12px;
+
+      /* Transitions */
+      --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-smooth: 200ms cubic-bezier(0.16, 1, 0.3, 1);
+
+      /* Shadows */
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+      --shadow-primary: 0 0 0 1px var(--color-primary), 0 0 0 4px rgba(47, 198, 246, 0.1);
+      --shadow-primary-hover: 0 0 0 1px rgba(47, 198, 246, 0.2), 0 4px 6px -1px rgba(47, 198, 246, 0.2);
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -35,27 +79,27 @@ async function handleRobotSettings(req, res) {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
       padding: 0;
       margin: 0;
-      background: #fafbfc;
-      color: #525c69;
+      background: var(--color-bg-secondary);
+      color: var(--color-text-secondary);
     }
 
     .container {
       max-width: 100%;
       margin: 0;
-      background: #ffffff;
-      padding: 16px 20px;
+      background: var(--color-bg);
+      padding: var(--space-md) 20px;
     }
 
     h2 {
-      margin-bottom: 24px;
-      color: #333f50;
+      margin-bottom: var(--space-lg);
+      color: var(--color-text);
       font-size: 20px;
       font-weight: 600;
       letter-spacing: -0.3px;
     }
 
     .form-group {
-      margin-bottom: 16px;
+      margin-bottom: var(--space-md);
     }
 
     .input-with-button {
@@ -71,33 +115,59 @@ async function handleRobotSettings(req, res) {
 
     label {
       display: block;
-      margin-bottom: 6px;
+      margin-bottom: var(--space-xs);
       font-weight: 500;
-      color: #525c69;
+      color: var(--color-text-secondary);
       font-size: 13px;
       letter-spacing: -0.1px;
     }
 
     input[type="text"],
     input[type="number"],
+    input[type="password"],
     select,
     textarea {
       width: 100%;
-      padding: 10px 14px;
-      border: 1px solid #dfe3e8;
-      border-radius: 8px;
+      padding: var(--space-sm) 14px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
       font-size: 13px;
       line-height: 1.5;
       font-family: inherit;
-      transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
-      background: #ffffff;
-      color: #333f50;
+      transition: all var(--transition-fast);
+      background: var(--color-bg);
+      color: var(--color-text);
+    }
+
+    /* Validation states */
+    input:invalid:not(:placeholder-shown),
+    textarea:invalid:not(:placeholder-shown) {
+      border-color: var(--color-danger);
+    }
+
+    input.error,
+    textarea.error,
+    select.error {
+      border-color: var(--color-danger);
+      box-shadow: 0 0 0 1px var(--color-danger), 0 0 0 4px rgba(255, 92, 92, 0.1);
+    }
+
+    .error-message {
+      display: none;
+      margin-top: var(--space-xs);
+      font-size: 12px;
+      color: var(--color-danger);
+      line-height: 1.4;
+    }
+
+    .error-message.visible {
+      display: block;
     }
 
     .btn-dots {
-      background: #ffffff;
-      border: 1px solid #dfe3e8;
-      color: #a8adb4;
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-muted);
       width: 40px;
       height: 40px;
       padding: 0;
@@ -107,18 +177,16 @@ async function handleRobotSettings(req, res) {
       font-size: 18px;
       font-weight: normal;
       cursor: pointer;
-      border-radius: 8px;
-      transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: var(--radius-md);
+      transition: all var(--transition-fast);
       flex-shrink: 0;
     }
 
     .btn-dots:hover {
-      background: #2fc6f6;
-      border-color: #2fc6f6;
-      color: #ffffff;
-      box-shadow:
-        0 0 0 1px #2fc6f6,
-        0 4px 6px -1px rgba(47, 198, 246, 0.3);
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: var(--color-bg);
+      box-shadow: 0 0 0 1px var(--color-primary), 0 4px 6px -1px rgba(47, 198, 246, 0.3);
       transform: scale(1.05);
     }
 
@@ -126,25 +194,38 @@ async function handleRobotSettings(req, res) {
       transform: scale(0.98);
     }
 
+    .btn-dots:focus-visible {
+      outline: none;
+      box-shadow: var(--shadow-primary);
+    }
+
     input:focus,
     select:focus,
     textarea:focus {
       outline: none;
-      border-color: #2fc6f6;
-      box-shadow:
-        0 0 0 1px #2fc6f6,
-        0 0 0 4px rgba(47, 198, 246, 0.1);
+      border-color: var(--color-primary);
+      box-shadow: var(--shadow-primary);
+    }
+
+    input:focus-visible,
+    select:focus-visible,
+    textarea:focus-visible {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: var(--shadow-primary);
     }
 
     @media (prefers-reduced-motion: reduce) {
-      input, select, textarea, .btn, .btn-dots, .variable-item {
-        transition-duration: 1ms;
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
       }
     }
 
     input::placeholder,
     textarea::placeholder {
-      color: #a8adb4;
+      color: var(--color-text-muted);
     }
 
     textarea {
@@ -153,10 +234,10 @@ async function handleRobotSettings(req, res) {
     }
 
     .form-data-section {
-      border: 1px solid #eef2f5;
-      border-radius: 10px;
-      padding: 16px;
-      background: #fafbfc;
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md);
+      background: var(--color-bg-secondary);
       margin-bottom: 12px;
     }
 
@@ -170,7 +251,7 @@ async function handleRobotSettings(req, res) {
     .form-data-header h3 {
       font-size: 15px;
       font-weight: 600;
-      color: #333f50;
+      color: var(--color-text);
       letter-spacing: -0.2px;
     }
 
@@ -187,66 +268,65 @@ async function handleRobotSettings(req, res) {
     }
 
     .btn {
-      padding: 10px 18px;
+      padding: var(--space-sm) 18px;
       border: none;
-      border-radius: 8px;
+      border-radius: var(--radius-md);
       font-size: 13px;
       font-weight: 500;
       cursor: pointer;
-      transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all var(--transition-fast);
       letter-spacing: -0.1px;
       line-height: 1.5;
     }
 
-    .btn-primary {
-      background: linear-gradient(180deg, #2fc6f6 0%, #1fb5e5 100%);
-      color: white;
-      box-shadow:
-        0 0 0 1px rgba(47, 198, 246, 0.1),
-        0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    .btn:focus-visible {
+      outline: none;
+      box-shadow: var(--shadow-primary);
     }
 
-    .btn-primary:hover {
-      background: linear-gradient(180deg, #1fb5e5 0%, #0ea5d5 100%);
-      box-shadow:
-        0 0 0 1px rgba(47, 198, 246, 0.2),
-        0 4px 6px -1px rgba(47, 198, 246, 0.2),
-        0 2px 4px -2px rgba(47, 198, 246, 0.15);
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .btn-primary {
+      background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+      color: white;
+      box-shadow: 0 0 0 1px rgba(47, 198, 246, 0.1), var(--shadow-sm);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: linear-gradient(180deg, var(--color-primary-dark) 0%, var(--color-primary-darker) 100%);
+      box-shadow: var(--shadow-primary-hover), 0 2px 4px -2px rgba(47, 198, 246, 0.15);
       transform: translateY(-1px);
     }
 
-    .btn-primary:active {
+    .btn-primary:active:not(:disabled) {
       transform: translateY(0);
-      box-shadow:
-        0 0 0 1px rgba(47, 198, 246, 0.2),
-        0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      box-shadow: 0 0 0 1px rgba(47, 198, 246, 0.2), var(--shadow-sm);
     }
 
     .btn-success {
-      background: linear-gradient(180deg, #2fc6f6 0%, #1fb5e5 100%);
+      background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
       color: white;
-      padding: 10px 24px;
+      padding: var(--space-sm) var(--space-lg);
       font-size: 13px;
-      box-shadow:
-        0 0 0 1px rgba(47, 198, 246, 0.1),
-        0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      box-shadow: 0 0 0 1px rgba(47, 198, 246, 0.1), var(--shadow-sm);
     }
 
-    .btn-success:hover {
-      background: linear-gradient(180deg, #1fb5e5 0%, #0ea5d5 100%);
-      box-shadow:
-        0 0 0 1px rgba(47, 198, 246, 0.2),
-        0 4px 6px -1px rgba(47, 198, 246, 0.2),
-        0 2px 4px -2px rgba(47, 198, 246, 0.15);
+    .btn-success:hover:not(:disabled) {
+      background: linear-gradient(180deg, var(--color-primary-dark) 0%, var(--color-primary-darker) 100%);
+      box-shadow: var(--shadow-primary-hover), 0 2px 4px -2px rgba(47, 198, 246, 0.15);
       transform: translateY(-1px);
     }
 
-    .btn-success:active {
+    .btn-success:active:not(:disabled) {
       transform: translateY(0);
     }
 
     .btn-danger {
-      background: linear-gradient(180deg, #ff5c5c 0%, #ff4747 100%);
+      background: linear-gradient(180deg, var(--color-danger) 0%, var(--color-danger-dark) 100%);
       color: white;
       width: 40px;
       height: 40px;
@@ -254,48 +334,44 @@ async function handleRobotSettings(req, res) {
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 8px;
+      border-radius: var(--radius-md);
       border: none;
-      box-shadow:
-        0 0 0 1px rgba(255, 92, 92, 0.1),
-        0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      box-shadow: 0 0 0 1px rgba(255, 92, 92, 0.1), var(--shadow-sm);
     }
 
-    .btn-danger:hover {
-      background: linear-gradient(180deg, #ff4747 0%, #ff3232 100%);
-      box-shadow:
-        0 0 0 1px rgba(255, 92, 92, 0.2),
-        0 4px 6px -1px rgba(255, 92, 92, 0.3);
+    .btn-danger:hover:not(:disabled) {
+      background: linear-gradient(180deg, var(--color-danger-dark) 0%, var(--color-danger-darker) 100%);
+      box-shadow: 0 0 0 1px rgba(255, 92, 92, 0.2), 0 4px 6px -1px rgba(255, 92, 92, 0.3);
       transform: scale(1.05);
     }
 
-    .btn-danger:active {
+    .btn-danger:active:not(:disabled) {
       transform: scale(0.98);
     }
 
     .btn-secondary {
-      background: #ffffff;
-      color: #525c69;
-      border: 1px solid #dfe3e8;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+      background: var(--color-bg);
+      color: var(--color-text-secondary);
+      border: 1px solid var(--color-border);
+      box-shadow: var(--shadow-sm);
     }
 
-    .btn-secondary:hover {
+    .btn-secondary:hover:not(:disabled) {
       background: #f8f9fa;
       border-color: #d0d5db;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
 
-    .btn-secondary:active {
-      background: #f3f5f7;
+    .btn-secondary:active:not(:disabled) {
+      background: var(--color-bg-tertiary);
     }
 
     .actions {
       display: flex;
       gap: 12px;
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px solid #eef2f5;
+      margin-top: var(--space-md);
+      padding-top: var(--space-md);
+      border-top: 1px solid var(--color-border-light);
     }
 
     /* Two columns for compact fields */
@@ -307,15 +383,15 @@ async function handleRobotSettings(req, res) {
 
     .help-text {
       font-size: 12px;
-      color: #a8adb4;
-      margin-top: 6px;
+      color: var(--color-text-muted);
+      margin-top: var(--space-xs);
       line-height: 1.5;
     }
 
     .alert {
       padding: 14px 18px;
-      border-radius: 8px;
-      margin-bottom: 24px;
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-lg);
       font-size: 13px;
       line-height: 1.6;
       border-left: 3px solid;
@@ -323,46 +399,66 @@ async function handleRobotSettings(req, res) {
 
     .alert-info {
       background: #e8f7ff;
-      border-left-color: #2fc6f6;
+      border-left-color: var(--color-primary);
       color: #0087c7;
     }
 
     .empty-state {
       text-align: center;
-      padding: 16px 20px;
-      color: #a8adb4;
+      padding: var(--space-md) 20px;
+      color: var(--color-text-muted);
       font-size: 13px;
+    }
+
+    /* Keyboard shortcut hint */
+    .keyboard-hint {
+      display: inline-block;
+      padding: 2px 6px;
+      background: var(--color-bg-tertiary);
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: monospace;
+      color: var(--color-text-muted);
+      margin-left: 8px;
     }
 
     /* Tabs Interface */
     .tabs {
       display: flex;
-      border-bottom: 1px solid #eef2f5;
-      margin-bottom: 16px;
+      border-bottom: 1px solid var(--color-border-light);
+      margin-bottom: var(--space-md);
       gap: 2px;
+      role: tablist;
     }
 
     .tab {
-      padding: 10px 16px;
+      padding: var(--space-sm) var(--space-md);
       border: none;
       background: none;
-      color: #525c69;
+      color: var(--color-text-secondary);
       font-size: 13px;
       font-weight: 500;
       cursor: pointer;
       border-bottom: 2px solid transparent;
-      transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all var(--transition-fast);
       position: relative;
     }
 
     .tab:hover {
-      color: #2fc6f6;
+      color: var(--color-primary);
       background: rgba(47, 198, 246, 0.05);
     }
 
     .tab.active {
-      color: #2fc6f6;
-      border-bottom-color: #2fc6f6;
+      color: var(--color-primary);
+      border-bottom-color: var(--color-primary);
+    }
+
+    .tab:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -2px;
+      border-radius: var(--radius-sm);
     }
 
     .tab-content {
@@ -379,8 +475,9 @@ async function handleRobotSettings(req, res) {
       right: 12px;
       top: 12px;
       font-size: 11px;
-      color: #a8adb4;
+      color: var(--color-text-muted);
       pointer-events: none;
+      transition: color var(--transition-fast);
     }
 
     .input-wrapper {
@@ -393,45 +490,51 @@ async function handleRobotSettings(req, res) {
     }
 
     code {
-      background: #f3f5f7;
+      background: var(--color-bg-tertiary);
       padding: 2px 6px;
       border-radius: 4px;
       font-family: 'Monaco', 'Courier New', monospace;
       font-size: 12px;
-      color: #2fc6f6;
+      color: var(--color-primary);
     }
 
     /* Segmented Control for Body Type */
     .segmented-control {
       display: inline-flex;
-      background: #f3f5f7;
-      border-radius: 8px;
+      background: var(--color-bg-tertiary);
+      border-radius: var(--radius-md);
       padding: 3px;
       gap: 2px;
-      margin-bottom: 16px;
+      margin-bottom: var(--space-md);
+      role: radiogroup;
     }
 
     .segment {
-      padding: 6px 16px;
+      padding: 6px var(--space-md);
       border: none;
       background: transparent;
-      color: #525c69;
+      color: var(--color-text-secondary);
       font-size: 12px;
       font-weight: 500;
       cursor: pointer;
-      border-radius: 6px;
-      transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: var(--radius-sm);
+      transition: all var(--transition-fast);
     }
 
     .segment:hover {
       background: rgba(47, 198, 246, 0.1);
-      color: #2fc6f6;
+      color: var(--color-primary);
     }
 
     .segment.active {
-      background: #ffffff;
-      color: #2fc6f6;
+      background: var(--color-bg);
+      color: var(--color-primary);
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .segment:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -2px;
     }
 
     /* Headers as Key-Value Pairs */
@@ -457,13 +560,12 @@ async function handleRobotSettings(req, res) {
       z-index: 10000;
       justify-content: center;
       align-items: center;
-      animation: overlayShow 200ms cubic-bezier(0.16, 1, 0.3, 1);
+      animation: overlayShow var(--transition-smooth);
     }
 
     @media (prefers-reduced-motion: reduce) {
       .modal-overlay {
         backdrop-filter: none;
-        animation-duration: 1ms;
       }
     }
 
@@ -496,30 +598,21 @@ async function handleRobotSettings(req, res) {
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: #ffffff;
-      border-radius: 12px;
+      background: var(--color-bg);
+      border-radius: var(--radius-xl);
       width: 90vw;
       max-width: 720px;
       max-height: 85vh;
       display: flex;
       flex-direction: column;
-      box-shadow:
-        0 0 0 1px rgba(0, 0, 0, 0.05),
-        0 10px 15px -3px rgba(0, 0, 0, 0.1),
-        0 4px 6px -4px rgba(0, 0, 0, 0.1);
-      animation: contentShow 200ms cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), var(--shadow-lg);
+      animation: contentShow var(--transition-smooth);
       will-change: transform;
     }
 
-    @media (prefers-reduced-motion: reduce) {
-      .modal-content {
-        animation-duration: 1ms;
-      }
-    }
-
     .modal-header {
-      padding: 24px 28px 20px;
-      border-bottom: 1px solid #eef2f5;
+      padding: var(--space-lg) 28px 20px;
+      border-bottom: 1px solid var(--color-border-light);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -529,7 +622,7 @@ async function handleRobotSettings(req, res) {
       margin: 0;
       font-size: 18px;
       font-weight: 600;
-      color: #525c69;
+      color: var(--color-text-secondary);
       letter-spacing: -0.2px;
     }
 
@@ -537,7 +630,7 @@ async function handleRobotSettings(req, res) {
       background: none;
       border: none;
       font-size: 28px;
-      color: #a8adb4;
+      color: var(--color-text-muted);
       cursor: pointer;
       padding: 0;
       width: 32px;
@@ -545,21 +638,26 @@ async function handleRobotSettings(req, res) {
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 6px;
-      transition: all 0.2s;
+      border-radius: var(--radius-sm);
+      transition: all var(--transition-fast);
     }
 
     .modal-close:hover {
-      background: #f3f5f7;
+      background: var(--color-bg-tertiary);
       color: #535c69;
     }
 
+    .modal-close:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -2px;
+    }
+
     .modal-body {
-      padding: 24px 28px 28px;
+      padding: var(--space-lg) 28px 28px;
       overflow-y: auto;
       overflow-x: hidden;
       flex: 1;
-      background: #fafbfc;
+      background: var(--color-bg-secondary);
     }
 
     /* Thin scrollbar like B24UI */
@@ -582,29 +680,27 @@ async function handleRobotSettings(req, res) {
 
     .modal-search {
       width: 100%;
-      padding: 11px 16px;
-      border: 1px solid #dfe3e8;
-      border-radius: 8px;
+      padding: 11px var(--space-md);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
       font-size: 13px;
       line-height: 1.5;
       margin-bottom: 20px;
-      background: #ffffff;
-      transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
-      color: #333f50;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+      background: var(--color-bg);
+      transition: all var(--transition-fast);
+      color: var(--color-text);
+      box-shadow: var(--shadow-sm);
     }
 
     .modal-search:focus {
       outline: none;
-      border-color: #2fc6f6;
-      background: #ffffff;
-      box-shadow:
-        0 0 0 1px #2fc6f6,
-        0 0 0 4px rgba(47, 198, 246, 0.1);
+      border-color: var(--color-primary);
+      background: var(--color-bg);
+      box-shadow: var(--shadow-primary);
     }
 
     .modal-search::placeholder {
-      color: #a8adb4;
+      color: var(--color-text-muted);
       opacity: 0.8;
     }
 
@@ -614,51 +710,50 @@ async function handleRobotSettings(req, res) {
       margin: 0;
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 10px;
+      gap: var(--space-sm);
     }
 
     .variable-item {
-      padding: 12px 16px;
-      border: 1px solid #eef2f5;
-      border-radius: 8px;
+      padding: 12px var(--space-md);
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-md);
       cursor: pointer;
-      transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
-      background: #ffffff;
+      transition: all var(--transition-fast);
+      background: var(--color-bg);
       font-size: 13px;
       font-weight: 500;
-      color: #525c69;
+      color: var(--color-text-secondary);
       text-align: left;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      box-shadow:
-        0 0 0 1px rgba(0, 0, 0, 0.02),
-        0 1px 2px rgba(0, 0, 0, 0.04);
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.04);
       line-height: 1.5;
     }
 
-    .variable-item:hover {
-      background: linear-gradient(180deg, #2fc6f6 0%, #1fb5e5 100%);
+    .variable-item:hover,
+    .variable-item:focus {
+      background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
       border-color: transparent;
-      color: #ffffff;
+      color: var(--color-bg);
       transform: translateY(-2px);
-      box-shadow:
-        0 0 0 1px rgba(47, 198, 246, 0.3),
-        0 4px 6px -1px rgba(47, 198, 246, 0.3),
-        0 2px 4px -2px rgba(47, 198, 246, 0.2);
+      box-shadow: 0 0 0 1px rgba(47, 198, 246, 0.3), 0 4px 6px -1px rgba(47, 198, 246, 0.3);
+    }
+
+    .variable-item:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
     }
 
     .variable-item:active {
       transform: translateY(0);
-      box-shadow:
-        0 0 0 1px rgba(47, 198, 246, 0.3),
-        0 2px 4px rgba(47, 198, 246, 0.3);
+      box-shadow: 0 0 0 1px rgba(47, 198, 246, 0.3), 0 2px 4px rgba(47, 198, 246, 0.3);
     }
 
     .no-variables {
       text-align: center;
       padding: 60px 20px;
-      color: #a8adb4;
+      color: var(--color-text-muted);
       font-size: 14px;
     }
   </style>
@@ -667,23 +762,23 @@ async function handleRobotSettings(req, res) {
   <div class="container">
     <form id="configForm">
       <!-- Tabs Navigation -->
-      <div class="tabs">
-        <button type="button" class="tab active" onclick="switchTab('request')">Request</button>
-        <button type="button" class="tab" onclick="switchTab('headers')">Headers</button>
-        <button type="button" class="tab" onclick="switchTab('body')">Body</button>
-        <button type="button" class="tab" onclick="switchTab('auth')">Authorization</button>
+      <div class="tabs" role="tablist" aria-label="Request configuration sections">
+        <button type="button" class="tab active" onclick="switchTab('request')" role="tab" aria-selected="true" aria-controls="tab-request" id="tab-btn-request">Request</button>
+        <button type="button" class="tab" onclick="switchTab('headers')" role="tab" aria-selected="false" aria-controls="tab-headers" id="tab-btn-headers">Headers</button>
+        <button type="button" class="tab" onclick="switchTab('body')" role="tab" aria-selected="false" aria-controls="tab-body" id="tab-btn-body">Body</button>
+        <button type="button" class="tab" onclick="switchTab('auth')" role="tab" aria-selected="false" aria-controls="tab-auth" id="tab-btn-auth">Authorization</button>
       </div>
 
       <!-- Request Tab -->
-      <div id="tab-request" class="tab-content active">
+      <div id="tab-request" class="tab-content active" role="tabpanel" aria-labelledby="tab-btn-request">
         <div class="form-group">
           <label for="url">URL *</label>
           <div class="input-wrapper">
-            <input type="text" id="url" placeholder="https://api.example.com/endpoint" required maxlength="2000" oninput="updateCharCounter(this, 'url-counter')">
-            <span id="url-counter" class="char-counter">0/2000</span>
+            <input type="text" id="url" placeholder="https://api.example.com/endpoint" required maxlength="2000" oninput="updateCharCounter(this, 'url-counter')" aria-describedby="url-help" aria-required="true">
+            <span id="url-counter" class="char-counter" aria-live="polite">0/2000</span>
           </div>
-          <button type="button" class="btn-dots" onclick="showVariablePicker('url')" title="Insert variable" style="position: absolute; right: 24px; margin-top: -38px;">⋯</button>
-          <div class="help-text">Target URL for the HTTP request</div>
+          <button type="button" class="btn-dots" onclick="showVariablePicker('url')" title="Insert variable" aria-label="Insert variable into URL" style="position: absolute; right: 24px; margin-top: -38px;">⋯</button>
+          <div class="help-text" id="url-help">Target URL for the HTTP request</div>
         </div>
 
         <div class="form-row-2col">
@@ -832,22 +927,28 @@ async function handleRobotSettings(req, res) {
       </div>
 
       <div class="actions">
-        <button type="submit" class="btn btn-success">Save</button>
-        <button type="button" class="btn btn-secondary" onclick="BX24.closeApplication()">Cancel</button>
+        <button type="submit" class="btn btn-success" aria-label="Save configuration">
+          Save
+          <span class="keyboard-hint">⌘S</span>
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="BX24.closeApplication()" aria-label="Cancel and close">
+          Cancel
+          <span class="keyboard-hint">Esc</span>
+        </button>
       </div>
     </form>
   </div>
 
   <!-- Variable Picker Modal -->
-  <div class="modal-overlay" id="variableModal">
+  <div class="modal-overlay" id="variableModal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Insert Variable</h3>
-        <button class="modal-close" onclick="closeVariablePicker()">×</button>
+        <h3 id="modal-title">Insert Variable</h3>
+        <button class="modal-close" onclick="closeVariablePicker()" aria-label="Close modal">×</button>
       </div>
       <div class="modal-body">
-        <input type="text" class="modal-search" id="variableSearch" placeholder="Search fields..." onkeyup="filterVariables()">
-        <ul class="variable-list" id="variableList"></ul>
+        <input type="text" class="modal-search" id="variableSearch" placeholder="Search fields..." onkeyup="filterVariables()" aria-label="Search variables">
+        <ul class="variable-list" id="variableList" role="list"></ul>
       </div>
     </div>
   </div>
@@ -860,19 +961,31 @@ async function handleRobotSettings(req, res) {
     let currentBodyType = 'none';
     let currentAuthType = 'none';
 
-    // Tab switching
+    // Tab switching with ARIA support
     function switchTab(tabName) {
       // Update tab buttons
       document.querySelectorAll('.tab').forEach(tab => {
         tab.classList.remove('active');
+        tab.setAttribute('aria-selected', 'false');
       });
-      event.target.classList.add('active');
+      const activeTab = event.target;
+      activeTab.classList.add('active');
+      activeTab.setAttribute('aria-selected', 'true');
 
       // Update tab content
       document.querySelectorAll('.tab-content').forEach(content => {
         content.classList.remove('active');
       });
-      document.getElementById('tab-' + tabName).classList.add('active');
+      const activeContent = document.getElementById('tab-' + tabName);
+      activeContent.classList.add('active');
+
+      // Focus first input in the activated tab
+      setTimeout(() => {
+        const firstInput = activeContent.querySelector('input, select, textarea');
+        if (firstInput) {
+          firstInput.focus();
+        }
+      }, 100);
     }
 
     // Character counter
@@ -973,6 +1086,52 @@ async function handleRobotSettings(req, res) {
       if (headerRows.length === 0) {
         document.getElementById('headersContainer').innerHTML =
           '<div class="empty-state">Click "+ Add Header" to add request headers</div>';
+      }
+    }
+
+    // Keyboard shortcuts handler
+    document.addEventListener('keydown', function(e) {
+      // Cmd/Ctrl + S to save
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        document.getElementById('configForm').dispatchEvent(new Event('submit'));
+      }
+
+      // Escape to cancel/close
+      if (e.key === 'Escape') {
+        // Close modal if open
+        const modal = document.getElementById('variableModal');
+        if (modal && modal.classList.contains('active')) {
+          closeVariablePicker();
+        } else {
+          // Otherwise close the application
+          BX24.closeApplication();
+        }
+      }
+
+      // Trap focus in modal when open
+      if (e.key === 'Tab') {
+        const modal = document.getElementById('variableModal');
+        if (modal && modal.classList.contains('active')) {
+          trapFocusInModal(e, modal);
+        }
+      }
+    });
+
+    // Trap focus within modal for accessibility
+    function trapFocusInModal(e, modal) {
+      const focusableElements = modal.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (e.shiftKey && document.activeElement === firstElement) {
+        e.preventDefault();
+        lastElement.focus();
+      } else if (!e.shiftKey && document.activeElement === lastElement) {
+        e.preventDefault();
+        firstElement.focus();
       }
     }
 
@@ -1164,10 +1323,12 @@ async function handleRobotSettings(req, res) {
     }
 
     let currentFieldId = null;
+    let previouslyFocusedElement = null;
 
     // Show variable picker
     function showVariablePicker(fieldId) {
       currentFieldId = fieldId;
+      previouslyFocusedElement = document.activeElement;
       console.log('Opening variable picker for field:', fieldId);
 
       // Show custom variable picker directly
@@ -1213,12 +1374,18 @@ async function handleRobotSettings(req, res) {
       const listContainer = document.getElementById('variableList');
 
       if (variables.length === 0) {
-        listContainer.innerHTML = '<div class="no-variables">No variables found</div>';
+        listContainer.innerHTML = '<div class="no-variables" role="status">No variables found</div>';
         return;
       }
 
       listContainer.innerHTML = variables.map(v => \`
-        <li class="variable-item" onclick="selectVariable('\${v.template}')" title="\${v.template}">
+        <li class="variable-item"
+            onclick="selectVariable('\${v.template}')"
+            onkeydown="if(event.key==='Enter' || event.key===' '){event.preventDefault();selectVariable('\${v.template}');}"
+            title="\${v.template}"
+            tabindex="0"
+            role="button"
+            aria-label="Insert variable \${v.name}">
           \${v.name}
         </li>
       \`).join('');
@@ -1245,6 +1412,12 @@ async function handleRobotSettings(req, res) {
     function closeVariablePicker() {
       document.getElementById('variableModal').classList.remove('active');
       currentFieldId = null;
+
+      // Restore focus to previously focused element
+      if (previouslyFocusedElement) {
+        previouslyFocusedElement.focus();
+        previouslyFocusedElement = null;
+      }
     }
 
     // Close modal when clicking outside (set up immediately since script is at bottom)
@@ -1282,9 +1455,69 @@ async function handleRobotSettings(req, res) {
       }
     }
 
+    // Form validation
+    function validateForm() {
+      let isValid = true;
+      const urlInput = document.getElementById('url');
+
+      // Clear previous errors
+      document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+      document.querySelectorAll('.error-message').forEach(el => el.classList.remove('visible'));
+
+      // Validate URL
+      if (!urlInput.value.trim()) {
+        showError(urlInput, 'URL is required');
+        isValid = false;
+      } else if (!isValidUrl(urlInput.value.trim())) {
+        showError(urlInput, 'Please enter a valid URL (must start with http:// or https://)');
+        isValid = false;
+      }
+
+      return isValid;
+    }
+
+    function isValidUrl(string) {
+      try {
+        const url = new URL(string);
+        return url.protocol === 'http:' || url.protocol === 'https:';
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function showError(input, message) {
+      input.classList.add('error');
+
+      // Create or update error message
+      let errorEl = input.parentElement.querySelector('.error-message');
+      if (!errorEl) {
+        errorEl = document.createElement('div');
+        errorEl.className = 'error-message';
+        errorEl.setAttribute('role', 'alert');
+        input.parentElement.appendChild(errorEl);
+      }
+
+      errorEl.textContent = message;
+      errorEl.classList.add('visible');
+
+      // Focus the invalid field
+      input.focus();
+    }
+
     // Handle form submission
     document.getElementById('configForm').addEventListener('submit', function(e) {
       e.preventDefault();
+
+      // Validate form
+      if (!validateForm()) {
+        return;
+      }
+
+      // Disable submit button to prevent double submission
+      const submitBtn = this.querySelector('[type="submit"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Saving...';
 
       // Collect configuration
       const config = {
@@ -1325,9 +1558,16 @@ async function handleRobotSettings(req, res) {
       console.log('Saving config:', config);
 
       // Send back to Bitrix24
-      BX24.placement.call('finish', {
-        config: JSON.stringify(config)
-      });
+      try {
+        BX24.placement.call('finish', {
+          config: JSON.stringify(config)
+        });
+      } catch (error) {
+        console.error('Error saving config:', error);
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+        alert('Failed to save configuration. Please try again.');
+      }
     });
   </script>
 </body>
