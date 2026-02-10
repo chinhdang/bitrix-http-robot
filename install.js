@@ -23,6 +23,18 @@ const robotConfig = {
     'ru': 'Выполняет HTTP запрос к внешнему серверу и возвращает результат (тело, код статуса, заголовки)'
   },
   PROPERTIES: {
+    config: {
+      Name: {
+        'en': 'Configuration (JSON)',
+        'ru': 'Конфигурация (JSON)'
+      },
+      Description: {
+        'en': 'Complete configuration from custom UI',
+        'ru': 'Полная конфигурация из пользовательского интерфейса'
+      },
+      Type: 'text',
+      Required: 'N'
+    },
     url: {
       Name: {
         'en': 'URL',
@@ -33,7 +45,7 @@ const robotConfig = {
         'ru': 'URL адрес для HTTP запроса'
       },
       Type: 'string',
-      Required: 'Y'
+      Required: 'N'
     },
     method: {
       Name: {
@@ -45,7 +57,7 @@ const robotConfig = {
         'ru': 'HTTP метод для использования'
       },
       Type: 'select',
-      Required: 'Y',
+      Required: 'N',
       Default: 'GET',
       Options: {
         'GET': 'GET',
