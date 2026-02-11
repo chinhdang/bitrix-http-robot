@@ -761,6 +761,12 @@ async function handleRobotSettings(req, res) {
 <body>
   <div class="container">
     <form id="configForm">
+      <!-- Hidden inputs for Bitrix24 to read on parent form save -->
+      <input type="hidden" name="property_config" id="hidden_config">
+      <input type="hidden" name="property_url" id="hidden_url">
+      <input type="hidden" name="property_method" id="hidden_method">
+      <input type="hidden" name="property_timeout" id="hidden_timeout">
+
       <!-- Tabs Navigation -->
       <div class="tabs" role="tablist" aria-label="Request configuration sections">
         <button type="button" class="tab active" onclick="switchTab('request')" role="tab" aria-selected="true" aria-controls="tab-request" id="tab-btn-request">Request</button>
@@ -1566,43 +1572,32 @@ async function handleRobotSettings(req, res) {
       console.log('Config string to save:', configString);
       console.log('Config string length:', configString.length);
 
-      // Send back to Bitrix24
+      // Update hidden fields - Bitrix24 will read these on parent form save
       try {
-        console.log('Preparing to set property values individually...');
+        console.log('Updating hidden form fields for Bitrix24...');
 
-        // Set each property individually - this is the correct way for robot placement
-        console.log('Setting config property:', configString.substring(0, 100) + '...');
-        BX24.placement.call('setPropertyValue', {
-          property: 'config',
-          value: configString
-        });
+        // Populate hidden inputs with property_ prefix
+        document.getElementById('hidden_config').value = configString;
+        document.getElementById('hidden_url').value = config.url;
+        document.getElementById('hidden_method').value = config.method;
+        document.getElementById('hidden_timeout').value = config.timeout;
 
-        console.log('Setting url property:', config.url);
-        BX24.placement.call('setPropertyValue', {
-          property: 'url',
-          value: config.url
-        });
+        console.log('Hidden fields updated:');
+        console.log('  property_config:', configString.substring(0, 100) + '...');
+        console.log('  property_url:', config.url);
+        console.log('  property_method:', config.method);
+        console.log('  property_timeout:', config.timeout);
 
-        console.log('Setting method property:', config.method);
-        BX24.placement.call('setPropertyValue', {
-          property: 'method',
-          value: config.method
-        });
+        // Show success message
+        alert('Configuration updated! Now click the green "LƯU" (Save) button below to save the robot.');
 
-        console.log('Setting timeout property:', config.timeout);
-        BX24.placement.call('setPropertyValue', {
-          property: 'timeout',
-          value: config.timeout
-        });
+        // Re-enable button
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
 
-        console.log('All properties set. Closing placement...');
-
-        // Close the placement - parent form will handle the actual save
-        BX24.placement.call('close');
-
-        console.log('Placement closed. User must now click the green SAVE button to persist.');
+        console.log('Ready for parent form save. User must click the green LƯU button.');
       } catch (error) {
-        console.error('Error setting properties:', error);
+        console.error('Error updating hidden fields:', error);
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
         alert('Failed to save configuration. Please try again.');
