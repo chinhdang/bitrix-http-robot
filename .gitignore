@@ -7,4 +7,3 @@ yarn-debug.log*
 yarn-error.log*
 tokens.json
 admin-ui/node_modules/
-admin-ui/dist/
