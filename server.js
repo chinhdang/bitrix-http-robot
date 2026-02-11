@@ -34,20 +34,33 @@ app.post('/bitrix-handler/uninstall', handleUninstall);
 // Placement handler for custom robot settings UI
 app.post('/placement/robot-settings', handleRobotSettings);
 
-// Test webhook endpoint - receives any request and logs it
+// Test webhook endpoint - receives any request and returns structured response
 const testWebhookLog = [];
 app.all('/test-webhook', (req, res) => {
   const entry = {
     timestamp: new Date().toISOString(),
     method: req.method,
-    headers: req.headers,
     query: req.query,
-    body: req.body
+    body: req.body,
+    hasBody: Object.keys(req.body || {}).length > 0
   };
   testWebhookLog.push(entry);
   if (testWebhookLog.length > 50) testWebhookLog.shift();
   logger.info('Test webhook received', entry);
-  res.json({ received: true, entry });
+
+  // Return structured response that Bitrix robot can capture
+  res.json({
+    success: true,
+    message: 'Webhook received successfully',
+    data: {
+      order_id: 'ORD-' + Date.now(),
+      status: 'processed',
+      received_method: req.method,
+      received_body: req.body,
+      received_query: req.query,
+      processed_at: new Date().toISOString()
+    }
+  });
 });
 
 // View test webhook log
