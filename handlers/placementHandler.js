@@ -796,7 +796,7 @@ async function handleRobotSettings(req, res) {
         <div class="form-group">
           <label for="url">URL *</label>
           <div class="input-wrapper">
-            <input type="text" id="url" placeholder="https://api.example.com/endpoint" required maxlength="2000" oninput="updateCharCounter(this, 'url-counter'); saveToPlacement();" aria-describedby="url-help" aria-required="true">
+            <input type="text" id="url" placeholder="https://api.example.com/endpoint" required maxlength="2000" oninput="updateCharCounter(this, 'url-counter'); saveToPlacement();" onchange="flushSave();" aria-describedby="url-help" aria-required="true">
             <span id="url-counter" class="char-counter" aria-live="polite">0/2000</span>
           </div>
           <button type="button" class="btn-dots" onclick="showVariablePicker('url')" title="Insert variable" aria-label="Insert variable into URL" style="position: absolute; right: 24px; margin-top: -38px;">⋯</button>
@@ -806,7 +806,7 @@ async function handleRobotSettings(req, res) {
         <div class="form-row-2col">
           <div class="form-group">
             <label for="method">HTTP Method *</label>
-            <select id="method" required onchange="saveToPlacement()">
+            <select id="method" required onchange="flushSave()">
               <option value="GET">GET</option>
               <option value="POST">POST</option>
               <option value="PUT">PUT</option>
@@ -816,7 +816,7 @@ async function handleRobotSettings(req, res) {
 
           <div class="form-group">
             <label for="timeout">Timeout (ms)</label>
-            <input type="number" id="timeout" value="30000" min="1000" max="300000" onchange="saveToPlacement()">
+            <input type="number" id="timeout" value="30000" min="1000" max="300000" onchange="flushSave()">
           </div>
         </div>
       </div>
@@ -869,7 +869,7 @@ async function handleRobotSettings(req, res) {
           <div class="form-group">
             <label for="rawBody">Raw Body Content</label>
             <div class="input-wrapper">
-              <textarea id="rawBody" placeholder='{"key": "value"} or any raw content' rows="4" maxlength="10000" oninput="updateCharCounter(this, 'rawBody-counter'); saveToPlacement();"></textarea>
+              <textarea id="rawBody" placeholder='{"key": "value"} or any raw content' rows="4" maxlength="10000" oninput="updateCharCounter(this, 'rawBody-counter'); saveToPlacement();" onchange="flushSave();"></textarea>
               <span id="rawBody-counter" class="char-counter">0/10000</span>
             </div>
             <button type="button" class="btn-dots" onclick="showVariablePicker('rawBody')" title="Insert variable" style="position: absolute; right: 24px; margin-top: -94px;">⋯</button>
@@ -882,7 +882,7 @@ async function handleRobotSettings(req, res) {
       <div id="tab-auth" class="tab-content">
         <div class="form-group">
           <label for="authType">Authorization Type</label>
-          <select id="authType" onchange="switchAuthType(this.value); saveToPlacement();">
+          <select id="authType" onchange="switchAuthType(this.value); flushSave();">
             <option value="none">No Auth</option>
             <option value="bearer">Bearer Token</option>
             <option value="basic">Basic Auth</option>
@@ -896,7 +896,7 @@ async function handleRobotSettings(req, res) {
             <label for="bearerToken">Bearer Token</label>
             <div class="input-with-button">
               <div class="input-wrapper">
-                <input type="text" id="bearerToken" placeholder="Enter token" maxlength="500" oninput="updateCharCounter(this, 'bearer-counter'); saveToPlacement();">
+                <input type="text" id="bearerToken" placeholder="Enter token" maxlength="500" oninput="updateCharCounter(this, 'bearer-counter'); saveToPlacement();" onchange="flushSave();">
                 <span id="bearer-counter" class="char-counter">0/500</span>
               </div>
               <button type="button" class="btn-dots" onclick="showVariablePicker('bearerToken')" title="Insert variable">⋯</button>
@@ -909,14 +909,14 @@ async function handleRobotSettings(req, res) {
           <div class="form-group">
             <label for="basicUsername">Username</label>
             <div class="input-with-button">
-              <input type="text" id="basicUsername" placeholder="Username" oninput="saveToPlacement()">
+              <input type="text" id="basicUsername" placeholder="Username" oninput="saveToPlacement()" onchange="flushSave()">
               <button type="button" class="btn-dots" onclick="showVariablePicker('basicUsername')" title="Insert variable">⋯</button>
             </div>
           </div>
           <div class="form-group">
             <label for="basicPassword">Password</label>
             <div class="input-with-button">
-              <input type="password" id="basicPassword" placeholder="Password" oninput="saveToPlacement()">
+              <input type="password" id="basicPassword" placeholder="Password" oninput="saveToPlacement()" onchange="flushSave()">
               <button type="button" class="btn-dots" onclick="showVariablePicker('basicPassword')" title="Insert variable">⋯</button>
             </div>
           </div>
@@ -926,13 +926,13 @@ async function handleRobotSettings(req, res) {
         <div id="auth-api-key" class="auth-section" style="display: none;">
           <div class="form-group">
             <label for="apiKeyName">Key Name</label>
-            <input type="text" id="apiKeyName" placeholder="e.g., X-API-Key, api_key" oninput="saveToPlacement()">
+            <input type="text" id="apiKeyName" placeholder="e.g., X-API-Key, api_key" oninput="saveToPlacement()" onchange="flushSave()">
           </div>
           <div class="form-group">
             <label for="apiKeyValue">Key Value</label>
             <div class="input-with-button">
               <div class="input-wrapper">
-                <input type="text" id="apiKeyValue" placeholder="Enter API key" maxlength="500" oninput="updateCharCounter(this, 'apikey-counter'); saveToPlacement();">
+                <input type="text" id="apiKeyValue" placeholder="Enter API key" maxlength="500" oninput="updateCharCounter(this, 'apikey-counter'); saveToPlacement();" onchange="flushSave();">
                 <span id="apikey-counter" class="char-counter">0/500</span>
               </div>
               <button type="button" class="btn-dots" onclick="showVariablePicker('apiKeyValue')" title="Insert variable">⋯</button>
@@ -940,7 +940,7 @@ async function handleRobotSettings(req, res) {
           </div>
           <div class="form-group">
             <label for="apiKeyLocation">Add to</label>
-            <select id="apiKeyLocation" onchange="saveToPlacement()">
+            <select id="apiKeyLocation" onchange="flushSave()">
               <option value="header">Header</option>
               <option value="query">Query Parameter</option>
             </select>
@@ -1037,7 +1037,7 @@ async function handleRobotSettings(req, res) {
       document.getElementById('body-form-data').style.display = type === 'form-data' ? 'block' : 'none';
       document.getElementById('body-raw').style.display = type === 'raw' ? 'block' : 'none';
 
-      saveToPlacement();
+      flushSave();
     }
 
     // Switch auth type
@@ -1078,8 +1078,8 @@ async function handleRobotSettings(req, res) {
 
       const rowHtml = \`
         <div class="header-row" id="\${rowId}">
-          <input type="text" placeholder="Header Name" value="\${key}" onchange="updateHeaderRow('\${rowId}', 'key', this.value); saveToPlacement();" oninput="updateHeaderRow('\${rowId}', 'key', this.value); saveToPlacement();">
-          <input type="text" placeholder="Header Value" value="\${value}" id="header_val_\${rowId}" onchange="updateHeaderRow('\${rowId}', 'value', this.value); saveToPlacement();" oninput="updateHeaderRow('\${rowId}', 'value', this.value); saveToPlacement();">
+          <input type="text" placeholder="Header Name" value="\${key}" onchange="updateHeaderRow('\${rowId}', 'key', this.value); flushSave();" oninput="updateHeaderRow('\${rowId}', 'key', this.value); saveToPlacement();">
+          <input type="text" placeholder="Header Value" value="\${value}" id="header_val_\${rowId}" onchange="updateHeaderRow('\${rowId}', 'value', this.value); flushSave();" oninput="updateHeaderRow('\${rowId}', 'value', this.value); saveToPlacement();">
           <button type="button" class="btn-dots" onclick="showVariablePicker('header_val_\${rowId}')" title="Insert variable">⋯</button>
           <button type="button" class="btn btn-danger" onclick="removeHeaderRow('\${rowId}')" title="Remove">×</button>
         </div>
@@ -1111,7 +1111,7 @@ async function handleRobotSettings(req, res) {
           '<div class="empty-state">Click "+ Add Header" to add request headers</div>';
       }
 
-      saveToPlacement();
+      flushSave();
     }
 
     // Keyboard shortcuts handler
@@ -1352,8 +1352,8 @@ async function handleRobotSettings(req, res) {
 
       const rowHtml = \`
         <div class="form-data-row" id="\${rowId}">
-          <input type="text" placeholder="Key" value="\${key}" onchange="updateFormDataRow('\${rowId}', 'key', this.value); saveToPlacement();" oninput="updateFormDataRow('\${rowId}', 'key', this.value); saveToPlacement();">
-          <input type="text" placeholder="Value (can use {{Document:FIELD}})" value="\${value}" id="formdata_\${rowId}" onchange="updateFormDataRow('\${rowId}', 'value', this.value); saveToPlacement();" oninput="updateFormDataRow('\${rowId}', 'value', this.value); saveToPlacement();">
+          <input type="text" placeholder="Key" value="\${key}" onchange="updateFormDataRow('\${rowId}', 'key', this.value); flushSave();" oninput="updateFormDataRow('\${rowId}', 'key', this.value); saveToPlacement();">
+          <input type="text" placeholder="Value" value="\${value}" id="formdata_\${rowId}" onchange="updateFormDataRow('\${rowId}', 'value', this.value); flushSave();" oninput="updateFormDataRow('\${rowId}', 'value', this.value); saveToPlacement();">
           <button type="button" class="btn-dots" onclick="showVariablePicker('formdata_\${rowId}')" title="Insert variable">⋯</button>
           <button type="button" class="btn btn-danger" onclick="removeFormDataRow('\${rowId}')" title="Remove">×</button>
         </div>
@@ -1385,7 +1385,7 @@ async function handleRobotSettings(req, res) {
           '<div class="empty-state">Click "+ Add Field" to add form data fields</div>';
       }
 
-      saveToPlacement();
+      flushSave();
     }
 
     let currentFieldId = null;
@@ -1524,7 +1524,7 @@ async function handleRobotSettings(req, res) {
         field.selectionStart = field.selectionEnd = start + variable.length;
         field.focus();
 
-        saveToPlacement();
+        flushSave();
       }
     }
 
@@ -1578,27 +1578,36 @@ async function handleRobotSettings(req, res) {
     }
 
     // Helper function to get current configuration
+    // Reads directly from DOM to avoid stale JS array state
     function getCurrentConfig() {
+      // Read headers directly from DOM
+      var headers = [];
+      document.querySelectorAll('#headersContainer .header-row').forEach(function(rowEl) {
+        var inputs = rowEl.querySelectorAll('input');
+        if (inputs.length >= 2 && inputs[0].value.trim()) {
+          headers.push({ key: inputs[0].value, value: inputs[1].value });
+        }
+      });
+
+      // Read form data directly from DOM
+      var formData = [];
+      if (currentBodyType === 'form-data') {
+        document.querySelectorAll('#formDataContainer .form-data-row').forEach(function(rowEl) {
+          var inputs = rowEl.querySelectorAll('input');
+          if (inputs.length >= 2 && inputs[0].value.trim()) {
+            formData.push({ key: inputs[0].value, value: inputs[1].value });
+          }
+        });
+      }
+
       return {
         url: document.getElementById('url').value,
         method: document.getElementById('method').value,
         timeout: document.getElementById('timeout').value,
-
-        // Headers
-        headers: headerRows.map(row => ({
-          key: row.key,
-          value: row.value
-        })).filter(row => row.key),
-
-        // Body
+        headers: headers,
         bodyType: currentBodyType,
-        formData: currentBodyType === 'form-data' ? formDataRows.map(row => ({
-          key: row.key,
-          value: row.value
-        })).filter(row => row.key) : [],
+        formData: formData,
         rawBody: currentBodyType === 'raw' ? document.getElementById('rawBody').value : '',
-
-        // Auth
         authType: currentAuthType,
         bearerToken: currentAuthType === 'bearer' ? document.getElementById('bearerToken').value : '',
         basicUsername: currentAuthType === 'basic' ? document.getElementById('basicUsername').value : '',
@@ -1609,19 +1618,37 @@ async function handleRobotSettings(req, res) {
       };
     }
 
-    // Debounced auto-save to placement on every input change
+    // Auto-save to placement
     var saveTimeout = null;
+    var lastSavedConfig = '';
+
+    // Core save function - calls setPropertyValue immediately
+    function doSave() {
+      var config = getCurrentConfig();
+      var configString = JSON.stringify(config);
+
+      // Skip if nothing changed
+      if (configString === lastSavedConfig) return;
+
+      lastSavedConfig = configString;
+      console.log('Saving config to placement:', config);
+      BX24.placement.call('setPropertyValue', {
+        config: configString
+      }, function(result) {
+        console.log('setPropertyValue result:', result);
+      });
+    }
+
+    // Debounced save - for oninput (while typing)
     function saveToPlacement() {
       clearTimeout(saveTimeout);
-      saveTimeout = setTimeout(function() {
-        var config = getCurrentConfig();
-        var configString = JSON.stringify(config);
-        console.log('Auto-saving config to placement:', config);
-        BX24.placement.call('setPropertyValue', {
-          config: configString
-        });
-        console.log('setPropertyValue called with config');
-      }, 300);
+      saveTimeout = setTimeout(doSave, 150);
+    }
+
+    // Immediate save - for onchange (blur/commit) and structural changes
+    function flushSave() {
+      clearTimeout(saveTimeout);
+      doSave();
     }
   </script>
 </body>
