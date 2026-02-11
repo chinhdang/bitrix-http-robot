@@ -847,7 +847,7 @@ async function handleRobotSettings(req, res) {
         </div>
 
         <!-- Form Data Section -->
-        <div id="body-form-data" class="body-section">
+        <div id="body-form-data" class="body-section" style="display: none;">
           <div class="form-data-section">
             <div class="form-data-header">
               <h3>Form Data Fields</h3>
@@ -1264,7 +1264,7 @@ async function handleRobotSettings(req, res) {
         }
 
         // Load body type and data
-        if (config.bodyType) {
+        if (config.bodyType && config.bodyType !== 'none') {
           currentBodyType = config.bodyType;
           var segments = document.querySelectorAll('.segment');
           segments.forEach(function(seg) {
@@ -1274,14 +1274,16 @@ async function handleRobotSettings(req, res) {
             }
           });
 
+          // Show/hide body sections properly
+          document.getElementById('body-form-data').style.display = config.bodyType === 'form-data' ? 'block' : 'none';
+          document.getElementById('body-raw').style.display = config.bodyType === 'raw' ? 'block' : 'none';
+
           if (config.bodyType === 'form-data' && config.formData) {
-            document.getElementById('body-form-data').style.display = 'block';
             config.formData.forEach(function(row) {
               addFormDataRow(row.key, row.value);
             });
-          } else if (config.bodyType === 'raw' && config.rawBody) {
-            document.getElementById('body-raw').style.display = 'block';
-            document.getElementById('rawBody').value = config.rawBody;
+          } else if (config.bodyType === 'raw') {
+            document.getElementById('rawBody').value = config.rawBody || '';
           }
         }
 
