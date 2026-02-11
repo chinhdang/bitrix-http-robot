@@ -760,12 +760,8 @@ async function handleRobotSettings(req, res) {
 </head>
 <body>
   <div class="container">
-    <form id="configForm">
-      <!-- Hidden inputs for Bitrix24 to read on parent form save -->
-      <input type="hidden" name="property_config" id="hidden_config">
-      <input type="hidden" name="property_url" id="hidden_url">
-      <input type="hidden" name="property_method" id="hidden_method">
-      <input type="hidden" name="property_timeout" id="hidden_timeout">
+    <form id="configForm" action="javascript:void(0);" method="post" onsubmit="return false;">
+      <!-- Hidden inputs removed - not needed for onSave event pattern -->
 
       <!-- Tabs Navigation -->
       <div class="tabs" role="tablist" aria-label="Request configuration sections">
