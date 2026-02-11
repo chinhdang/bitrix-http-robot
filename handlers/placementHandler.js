@@ -723,11 +723,18 @@ async function handleRobotSettings(req, res) {
 
     /* Output Mapping Rows */
     .output-mapping-row {
-      display: grid;
-      grid-template-columns: auto 1fr 1fr 32px;
-      gap: 6px;
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 8px 10px;
       margin-bottom: 6px;
-      align-items: start;
+    }
+
+    .output-mapping-inputs {
+      display: grid;
+      grid-template-columns: auto 1fr 1fr 28px;
+      gap: 6px;
+      align-items: center;
     }
 
     .output-mapping-row input {
@@ -735,14 +742,20 @@ async function handleRobotSettings(req, res) {
     }
 
     .output-slot-label {
-      display: flex;
-      align-items: center;
-      height: 32px;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
       color: var(--color-primary);
       white-space: nowrap;
-      padding: 0 4px;
+    }
+
+    .output-mapping-row .btn-danger {
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     /* Test Request Styles */
@@ -918,20 +931,35 @@ async function handleRobotSettings(req, res) {
 
     /* Inline Mapping Preview */
     .mapping-preview {
-      grid-column: 2 / -1;
       font-size: 11px;
       font-family: 'Monaco', 'Courier New', monospace;
       color: var(--color-text-muted);
-      padding: 2px 0 4px 0;
-      line-height: 1.4;
+      padding: 4px 0 0 0;
+      margin-left: 2px;
+      line-height: 1.3;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
-    .preview-value { color: #16a34a; }
-    .preview-not-found { color: #9ca3af; font-style: italic; }
-    .preview-fallback { color: #ea580c; }
+    .mapping-preview:empty { display: none; }
+
+    .preview-value {
+      color: #16a34a;
+      background: #f0fdf4;
+      padding: 1px 6px;
+      border-radius: 3px;
+    }
+    .preview-not-found {
+      color: #9ca3af;
+      font-style: italic;
+    }
+    .preview-fallback {
+      color: #ea580c;
+      background: #fff7ed;
+      padding: 1px 6px;
+      border-radius: 3px;
+    }
   </style>
 </head>
 <body>
@@ -1356,14 +1384,17 @@ async function handleRobotSettings(req, res) {
 
       var rowHtml =
         '<div class="output-mapping-row" id="' + rowId + '">' +
-          '<span class="output-slot-label">Output ' + slotNum + '</span>' +
-          '<input type="text" placeholder="JSON path (e.g. data.order_id)" value="' + escapeAttr(path) + '" ' +
-            'oninput="updateOutputMapping(\\'' + rowId + '\\', \\'path\\', this.value); saveToPlacement(); updateMappingPreviews();" ' +
-            'onchange="updateOutputMapping(\\'' + rowId + '\\', \\'path\\', this.value); flushSave();">' +
-          '<input type="text" placeholder="Fallback" value="' + escapeAttr(fallback) + '" ' +
-            'oninput="updateOutputMapping(\\'' + rowId + '\\', \\'fallback\\', this.value); saveToPlacement(); updateMappingPreviews();" ' +
-            'onchange="updateOutputMapping(\\'' + rowId + '\\', \\'fallback\\', this.value); flushSave();">' +
-          '<button type="button" class="btn btn-danger" onclick="removeOutputMappingRow(\\'' + rowId + '\\')" title="Remove">×</button>' +
+          '<div class="output-mapping-inputs">' +
+            '<span class="output-slot-label">Output ' + slotNum + '</span>' +
+            '<input type="text" placeholder="JSON path (e.g. data.order_id)" value="' + escapeAttr(path) + '" ' +
+              'oninput="updateOutputMapping(\\'' + rowId + '\\', \\'path\\', this.value); saveToPlacement(); updateMappingPreviews();" ' +
+              'onchange="updateOutputMapping(\\'' + rowId + '\\', \\'path\\', this.value); flushSave();">' +
+            '<input type="text" placeholder="Fallback" value="' + escapeAttr(fallback) + '" ' +
+              'oninput="updateOutputMapping(\\'' + rowId + '\\', \\'fallback\\', this.value); saveToPlacement(); updateMappingPreviews();" ' +
+              'onchange="updateOutputMapping(\\'' + rowId + '\\', \\'fallback\\', this.value); flushSave();">' +
+            '<button type="button" class="btn btn-danger" onclick="removeOutputMappingRow(\\'' + rowId + '\\')" title="Remove">×</button>' +
+          '</div>' +
+          '<div class="mapping-preview" id="preview_' + rowId + '"></div>' +
         '</div>';
 
       container.insertAdjacentHTML('beforeend', rowHtml);
@@ -1380,11 +1411,8 @@ async function handleRobotSettings(req, res) {
     }
 
     function removeOutputMappingRow(rowId) {
-      // Also remove the preview element right after the row
       var el = document.getElementById(rowId);
       if (el) {
-        var next = el.nextElementSibling;
-        if (next && next.classList.contains('mapping-preview')) next.remove();
         el.remove();
       }
       outputMappingRows = outputMappingRows.filter(function(r) { return r.id !== rowId; });
@@ -2295,39 +2323,39 @@ async function handleRobotSettings(req, res) {
     }
 
     function updateMappingPreviews() {
-      // Remove old previews
-      document.querySelectorAll('.mapping-preview').forEach(function(el) { el.remove(); });
-
-      if (!lastTestResponseParsed) return;
+      if (!lastTestResponseParsed) {
+        clearMappingPreviews();
+        return;
+      }
 
       document.querySelectorAll('#outputMappingsContainer .output-mapping-row').forEach(function(rowEl) {
         var inputs = rowEl.querySelectorAll('input');
-        if (inputs.length < 2) return;
+        var previewEl = rowEl.querySelector('.mapping-preview');
+        if (inputs.length < 2 || !previewEl) return;
         var path = inputs[0].value.trim();
         var fallback = inputs[1].value;
 
-        if (!path) return;
+        if (!path) {
+          previewEl.innerHTML = '';
+          return;
+        }
 
         var value = extractJsonPathClient(lastTestResponseParsed, path);
-        var previewEl = document.createElement('div');
-        previewEl.className = 'mapping-preview';
 
         if (value !== undefined) {
           var display = typeof value === 'object' ? JSON.stringify(value) : String(value);
           if (display.length > 80) display = display.substring(0, 80) + '...';
-          previewEl.innerHTML = '<span class="preview-value">' + escapeHtml(display) + '</span>';
+          previewEl.innerHTML = '\\u2192 <span class="preview-value">' + escapeHtml(display) + '</span>';
         } else if (fallback) {
-          previewEl.innerHTML = '<span class="preview-fallback">not found, fallback: ' + escapeHtml(fallback) + '</span>';
+          previewEl.innerHTML = '\\u2192 <span class="preview-fallback">fallback: ' + escapeHtml(fallback) + '</span>';
         } else {
-          previewEl.innerHTML = '<span class="preview-not-found">not found</span>';
+          previewEl.innerHTML = '\\u2192 <span class="preview-not-found">not found</span>';
         }
-
-        rowEl.insertAdjacentElement('afterend', previewEl);
       });
     }
 
     function clearMappingPreviews() {
-      document.querySelectorAll('.mapping-preview').forEach(function(el) { el.remove(); });
+      document.querySelectorAll('.mapping-preview').forEach(function(el) { el.innerHTML = ''; });
     }
   </script>
 </body>
