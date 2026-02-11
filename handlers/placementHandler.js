@@ -1149,6 +1149,56 @@ async function handleRobotSettings(req, res) {
       placementData = BX24.placement.info();
       console.log('Placement data:', placementData);
 
+      // CRITICAL: Listen for parent form save event
+      console.log('Binding onSave event listener...');
+      BX24.placement.bindEvent('onSave', function() {
+        console.log('onSave event fired! Parent form is saving...');
+
+        // Collect current configuration
+        const config = getCurrentConfig();
+        const configString = JSON.stringify(config);
+
+        console.log('Providing values to parent on save:', {
+          config: configString.substring(0, 100) + '...',
+          url: config.url,
+          method: config.method,
+          timeout: config.timeout
+        });
+
+        // Provide values when parent form saves
+        try {
+          BX24.placement.call('setPropertyValue', {
+            property: 'config',
+            value: configString
+          });
+
+          BX24.placement.call('setPropertyValue', {
+            property: 'url',
+            value: config.url
+          });
+
+          BX24.placement.call('setPropertyValue', {
+            property: 'method',
+            value: config.method
+          });
+
+          BX24.placement.call('setPropertyValue', {
+            property: 'timeout',
+            value: config.timeout
+          });
+
+          console.log('Values provided to parent successfully');
+
+          // Return true to allow save to continue
+          return true;
+        } catch (error) {
+          console.error('Error providing values:', error);
+          return false;
+        }
+      });
+
+      console.log('onSave event listener bound successfully');
+
       // Check available commands
       BX24.placement.getInterface(function(result) {
         console.log('Available commands:', result);
@@ -1514,23 +1564,9 @@ async function handleRobotSettings(req, res) {
       input.focus();
     }
 
-    // Handle form submission
-    document.getElementById('configForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-
-      // Validate form
-      if (!validateForm()) {
-        return;
-      }
-
-      // Disable submit button to prevent double submission
-      const submitBtn = this.querySelector('[type="submit"]');
-      const originalText = submitBtn.textContent;
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Saving...';
-
-      // Collect configuration
-      const config = {
+    // Helper function to get current configuration
+    function getCurrentConfig() {
+      return {
         url: document.getElementById('url').value,
         method: document.getElementById('method').value,
         timeout: document.getElementById('timeout').value,
@@ -1558,50 +1594,22 @@ async function handleRobotSettings(req, res) {
         apiKeyValue: currentAuthType === 'api-key' ? document.getElementById('apiKeyValue').value : '',
         apiKeyLocation: currentAuthType === 'api-key' ? document.getElementById('apiKeyLocation').value : 'header'
       };
+    }
 
-      // Validate URL
-      if (!config.url) {
-        alert('URL is required');
+    // Handle form submission
+    document.getElementById('configForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      // Validate form
+      if (!validateForm()) {
         return;
       }
 
-      console.log('Saving config:', config);
+      console.log('Form validated. Configuration is ready.');
+      console.log('Current config:', getCurrentConfig());
 
-      // Prepare data for Bitrix24
-      const configString = JSON.stringify(config);
-      console.log('Config string to save:', configString);
-      console.log('Config string length:', configString.length);
-
-      // Update hidden fields - Bitrix24 will read these on parent form save
-      try {
-        console.log('Updating hidden form fields for Bitrix24...');
-
-        // Populate hidden inputs with property_ prefix
-        document.getElementById('hidden_config').value = configString;
-        document.getElementById('hidden_url').value = config.url;
-        document.getElementById('hidden_method').value = config.method;
-        document.getElementById('hidden_timeout').value = config.timeout;
-
-        console.log('Hidden fields updated:');
-        console.log('  property_config:', configString.substring(0, 100) + '...');
-        console.log('  property_url:', config.url);
-        console.log('  property_method:', config.method);
-        console.log('  property_timeout:', config.timeout);
-
-        // Show success message
-        alert('Configuration updated! Now click the green "LƯU" (Save) button below to save the robot.');
-
-        // Re-enable button
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
-
-        console.log('Ready for parent form save. User must click the green LƯU button.');
-      } catch (error) {
-        console.error('Error updating hidden fields:', error);
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
-        alert('Failed to save configuration. Please try again.');
-      }
+      // Show info message
+      alert('Configuration is ready!\n\nNow click the green "LƯU" (Save) button at the bottom to save the robot.\n\nThe values will be saved automatically when you click LƯU.');
     });
   </script>
 </body>
