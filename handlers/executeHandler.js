@@ -18,6 +18,86 @@ function extractJsonPath(obj, path) {
 }
 
 /**
+ * Build request headers from config (array/string/object) + auth headers
+ */
+function buildRequestHeaders(config) {
+  let headers = {};
+  if (config.headers) {
+    if (Array.isArray(config.headers)) {
+      config.headers.forEach(header => {
+        if (header.key) {
+          headers[header.key] = header.value || '';
+        }
+      });
+    } else if (typeof config.headers === 'string') {
+      try {
+        headers = JSON.parse(config.headers);
+      } catch (e) {
+        throw new Error('Invalid headers JSON format');
+      }
+    } else if (typeof config.headers === 'object') {
+      headers = config.headers;
+    }
+  }
+
+  // Handle authorization
+  if (config.authType && config.authType !== 'none') {
+    if (config.authType === 'bearer' && config.bearerToken) {
+      headers['Authorization'] = `Bearer ${config.bearerToken}`;
+    } else if (config.authType === 'basic' && config.basicUsername && config.basicPassword) {
+      const credentials = Buffer.from(`${config.basicUsername}:${config.basicPassword}`).toString('base64');
+      headers['Authorization'] = `Basic ${credentials}`;
+    } else if (config.authType === 'api-key' && config.apiKeyName && config.apiKeyValue) {
+      if (config.apiKeyLocation === 'header') {
+        headers[config.apiKeyName] = config.apiKeyValue;
+      }
+    }
+  }
+
+  return headers;
+}
+
+/**
+ * Build request body from config bodyType/formData/rawBody
+ * May modify headers (e.g. add Content-Type for JSON form data)
+ */
+function buildRequestBody(config, headers) {
+  let requestBody = null;
+
+  if (config.bodyType === 'raw' && config.rawBody) {
+    requestBody = config.rawBody;
+  } else if (config.bodyType === 'form-data' && config.formData && Array.isArray(config.formData) && config.formData.length > 0) {
+    const formDataObj = {};
+    config.formData.forEach(field => {
+      if (field.key) {
+        formDataObj[field.key] = field.value || '';
+      }
+    });
+
+    const contentType = headers['Content-Type'] || headers['content-type'] || '';
+
+    if (contentType.includes('application/x-www-form-urlencoded')) {
+      const params = new URLSearchParams();
+      Object.keys(formDataObj).forEach(key => {
+        params.append(key, formDataObj[key]);
+      });
+      requestBody = params.toString();
+    } else {
+      requestBody = JSON.stringify(formDataObj);
+      if (!headers['Content-Type']) {
+        headers['Content-Type'] = 'application/json';
+      }
+    }
+
+    logger.debug('Built request body from form data', { formDataObj, requestBody });
+  } else if (config.body) {
+    requestBody = config.body;
+  }
+
+  return requestBody;
+}
+
+/**
  * Main handler for HTTP Request Robot/Activity execution
  * This is called by Bitrix24 when the robot/activity runs in a workflow
  *
@@ -72,82 +152,8 @@ async function executeHttpRequest(req, res) {
       }
     }
 
-    // Parse headers if provided
-    let headers = {};
-    if (config.headers) {
-      if (Array.isArray(config.headers)) {
-        // New format: array of {key, value} objects
-        config.headers.forEach(header => {
-          if (header.key) {
-            headers[header.key] = header.value || '';
-          }
-        });
-      } else if (typeof config.headers === 'string') {
-        // Legacy format: JSON string
-        try {
-          headers = JSON.parse(config.headers);
-        } catch (e) {
-          throw new Error('Invalid headers JSON format');
-        }
-      } else if (typeof config.headers === 'object') {
-        // Direct object
-        headers = config.headers;
-      }
-    }
-
-    // Handle authorization
-    if (config.authType && config.authType !== 'none') {
-      if (config.authType === 'bearer' && config.bearerToken) {
-        headers['Authorization'] = `Bearer ${config.bearerToken}`;
-      } else if (config.authType === 'basic' && config.basicUsername && config.basicPassword) {
-        const credentials = Buffer.from(`${config.basicUsername}:${config.basicPassword}`).toString('base64');
-        headers['Authorization'] = `Basic ${credentials}`;
-      } else if (config.authType === 'api-key' && config.apiKeyName && config.apiKeyValue) {
-        if (config.apiKeyLocation === 'header') {
-          headers[config.apiKeyName] = config.apiKeyValue;
-        }
-        // Query param handling would be in URL modification
-      }
-    }
-
-    // Prepare request body based on bodyType
-    let requestBody = null;
-
-    if (config.bodyType === 'raw' && config.rawBody) {
-      requestBody = config.rawBody;
-    } else if (config.bodyType === 'form-data' && config.formData && Array.isArray(config.formData) && config.formData.length > 0) {
-      // Build form data object
-      const formDataObj = {};
-      config.formData.forEach(field => {
-        if (field.key) {
-          formDataObj[field.key] = field.value || '';
-        }
-      });
-
-      // Check Content-Type to determine format
-      const contentType = headers['Content-Type'] || headers['content-type'] || '';
-
-      if (contentType.includes('application/x-www-form-urlencoded')) {
-        // Convert to URL-encoded format
-        const params = new URLSearchParams();
-        Object.keys(formDataObj).forEach(key => {
-          params.append(key, formDataObj[key]);
-        });
-        requestBody = params.toString();
-      } else {
-        // Default to JSON
-        requestBody = JSON.stringify(formDataObj);
-        if (!headers['Content-Type']) {
-          headers['Content-Type'] = 'application/json';
-        }
-      }
-
-      logger.debug('Built request body from form data', { formDataObj, requestBody });
-    }
-    // Priority 3: Legacy body property
-    else if (config.body) {
-      requestBody = config.body;
-    }
+    const headers = buildRequestHeaders(config);
+    const requestBody = buildRequestBody(config, headers);
 
     // Prepare HTTP request configuration
     const requestConfig = {
@@ -264,5 +270,8 @@ async function executeHttpRequest(req, res) {
 }
 
 module.exports = {
-  executeHttpRequest
+  executeHttpRequest,
+  extractJsonPath,
+  buildRequestHeaders,
+  buildRequestBody
 };

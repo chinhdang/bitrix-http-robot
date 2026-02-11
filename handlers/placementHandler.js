@@ -799,10 +799,155 @@ async function handleRobotSettings(req, res) {
       white-space: nowrap;
       padding: 0 4px;
     }
+
+    /* Test Request Styles */
+    .test-warning {
+      background: #fff8e1;
+      border: 1px solid #ffe082;
+      border-left: 3px solid var(--color-warning);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      font-size: 12px;
+      color: #8d6e00;
+      line-height: 1.5;
+      margin-bottom: var(--space-md);
+    }
+
+    .test-results-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: var(--space-md);
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: -0.1px;
+    }
+
+    .status-badge.status-2xx {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .status-badge.status-3xx {
+      background: #fff8e1;
+      color: #f57f17;
+    }
+
+    .status-badge.status-4xx,
+    .status-badge.status-5xx {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    .response-body-pre {
+      background: var(--color-bg-tertiary);
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      overflow-x: auto;
+      max-height: 300px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: var(--color-text);
+    }
+
+    .test-results-section {
+      margin-bottom: var(--space-md);
+    }
+
+    .test-results-section h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: var(--space-sm);
+    }
+
+    .output-preview-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .output-preview-table th {
+      text-align: left;
+      padding: 8px 12px;
+      background: var(--color-bg-tertiary);
+      border: 1px solid var(--color-border-light);
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      font-size: 12px;
+    }
+
+    .output-preview-table td {
+      padding: 8px 12px;
+      border: 1px solid var(--color-border-light);
+      color: var(--color-text);
+    }
+
+    .output-preview-table td.value-null {
+      color: var(--color-text-muted);
+      font-style: italic;
+    }
+
+    .test-error {
+      background: #ffebee;
+      border: 1px solid #ffcdd2;
+      border-left: 3px solid var(--color-danger);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      font-size: 12px;
+      color: #c62828;
+      line-height: 1.5;
+    }
+
+    .btn-test {
+      background: linear-gradient(180deg, #4caf50 0%, #43a047 100%);
+      color: white;
+      box-shadow: 0 0 0 1px rgba(76, 175, 80, 0.1), var(--shadow-sm);
+    }
+
+    .btn-test:hover:not(:disabled) {
+      background: linear-gradient(180deg, #43a047 0%, #388e3c 100%);
+      box-shadow: 0 0 0 1px rgba(76, 175, 80, 0.2), 0 4px 6px -1px rgba(76, 175, 80, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .btn-test:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .btn-loading .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
   </style>
 </head>
 <body>
-  <script>window.__SAVED_CONFIG__ = ${JSON.stringify(savedConfig)};</script>
+  <script>
+    window.__SAVED_CONFIG__ = ${JSON.stringify(savedConfig)};
+    window.__HANDLER_URL__ = '${process.env.HANDLER_URL || ''}';
+  </script>
   <div class="container">
     <form id="configForm" action="javascript:void(0);" onsubmit="return false;">
       <!-- Hidden inputs removed - not needed for onSave event pattern -->
@@ -989,6 +1134,45 @@ async function handleRobotSettings(req, res) {
             <div class="empty-state">
               Click "+ Add Mapping" to extract values from the JSON response
             </div>
+          </div>
+        </div>
+
+        <!-- Test Request Section -->
+        <div class="form-data-section" style="margin-top: 20px;">
+          <div class="form-data-header">
+            <h3>Test Request</h3>
+            <button type="button" class="btn btn-test" onclick="sendTestRequest()" id="testRequestBtn">
+              &#9654; Send Test
+            </button>
+          </div>
+          <div class="help-text" style="margin-top: -10px; margin-bottom: 14px;">
+            Send a test request to preview the response and verify output mappings.
+          </div>
+
+          <div id="testVariableWarning" class="test-warning" style="display:none;">
+            &#9888; Config contains Bitrix variables (e.g. {=Document:...}). In test mode, variables are sent as literal strings — they are only resolved when the robot runs in a real workflow.
+          </div>
+
+          <div id="testResultsPanel" style="display:none;">
+            <div class="test-results-header">
+              <span class="status-badge" id="testStatusBadge">200 OK</span>
+              <span class="help-text" id="testExecTime"></span>
+            </div>
+
+            <div class="test-results-section">
+              <h4>Response Body</h4>
+              <pre class="response-body-pre" id="testResponseBody"></pre>
+            </div>
+
+            <div class="test-results-section" id="testOutputSection" style="display:none;">
+              <h4>Output Mapping Results</h4>
+              <table class="output-preview-table" id="testOutputTable">
+                <thead><tr><th>Output</th><th>Path</th><th>Value</th></tr></thead>
+                <tbody id="testOutputBody"></tbody>
+              </table>
+            </div>
+
+            <div id="testErrorPanel" style="display:none;" class="test-error"></div>
           </div>
         </div>
       </div>
@@ -1854,6 +2038,129 @@ async function handleRobotSettings(req, res) {
     function flushSave() {
       clearTimeout(saveTimeout);
       doSave();
+    }
+
+    // --- Test Request ---
+
+    function sendTestRequest() {
+      var config = getCurrentConfig();
+      var btn = document.getElementById('testRequestBtn');
+      var resultsPanel = document.getElementById('testResultsPanel');
+      var warningEl = document.getElementById('testVariableWarning');
+      var errorPanel = document.getElementById('testErrorPanel');
+
+      // Validate URL
+      if (!config.url || !config.url.trim()) {
+        alert('Please enter a URL first.');
+        return;
+      }
+
+      // Check for Bitrix variables
+      var configStr = JSON.stringify(config);
+      var hasVars = /\\{=\\w+:\\w+\\}/.test(configStr);
+      warningEl.style.display = hasVars ? 'block' : 'none';
+
+      // Set loading state
+      btn.disabled = true;
+      btn.classList.add('btn-loading');
+      btn.innerHTML = '<span class="spinner"></span> Sending...';
+      resultsPanel.style.display = 'none';
+      errorPanel.style.display = 'none';
+
+      // Determine base URL
+      var baseUrl = window.__HANDLER_URL__ || '';
+      if (!baseUrl) {
+        // Fallback: derive from current page URL
+        var loc = window.location;
+        baseUrl = loc.protocol + '//' + loc.host;
+      }
+      // Remove trailing slash
+      baseUrl = baseUrl.replace(/\\/$/, '');
+
+      fetch(baseUrl + '/bitrix-handler/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ config: config })
+      })
+      .then(function(resp) { return resp.json(); })
+      .then(function(data) {
+        resultsPanel.style.display = 'block';
+
+        if (data.success) {
+          // Status badge
+          var badge = document.getElementById('testStatusBadge');
+          badge.textContent = data.statusCode + ' ' + (data.statusText || '');
+          badge.className = 'status-badge';
+          if (data.statusCode >= 200 && data.statusCode < 300) badge.classList.add('status-2xx');
+          else if (data.statusCode >= 300 && data.statusCode < 400) badge.classList.add('status-3xx');
+          else if (data.statusCode >= 400 && data.statusCode < 500) badge.classList.add('status-4xx');
+          else badge.classList.add('status-5xx');
+
+          // Execution time
+          document.getElementById('testExecTime').textContent = data.executionTime + 'ms';
+
+          // Response body
+          var bodyEl = document.getElementById('testResponseBody');
+          if (data.responseBodyParsed) {
+            bodyEl.textContent = JSON.stringify(data.responseBodyParsed, null, 2);
+          } else {
+            bodyEl.textContent = data.responseBody || '(empty)';
+          }
+
+          // Output mappings
+          var outputSection = document.getElementById('testOutputSection');
+          var outputBody = document.getElementById('testOutputBody');
+          if (data.outputMappings && data.outputMappings.length > 0) {
+            outputSection.style.display = 'block';
+            outputBody.innerHTML = data.outputMappings.map(function(m) {
+              var slotNum = m.output.replace('output_', '');
+              var valueDisplay = m.value !== null && m.value !== undefined
+                ? '<code>' + escapeHtml(String(m.value)) + '</code>'
+                : '<span style="color:var(--color-text-muted);font-style:italic;">not found</span>';
+              return '<tr><td>Output ' + slotNum + '</td><td><code>' + escapeHtml(m.path) + '</code></td><td>' + valueDisplay + '</td></tr>';
+            }).join('');
+          } else {
+            outputSection.style.display = 'none';
+          }
+
+          errorPanel.style.display = 'none';
+        } else {
+          // Error response
+          document.getElementById('testStatusBadge').textContent = 'Error';
+          document.getElementById('testStatusBadge').className = 'status-badge status-5xx';
+          document.getElementById('testExecTime').textContent = data.executionTime ? data.executionTime + 'ms' : '';
+          document.getElementById('testResponseBody').textContent = '';
+          document.getElementById('testOutputSection').style.display = 'none';
+          errorPanel.style.display = 'block';
+          errorPanel.textContent = data.error || 'Unknown error';
+        }
+
+        // Variable warning from server
+        if (data.hasVariables) {
+          warningEl.style.display = 'block';
+        }
+      })
+      .catch(function(err) {
+        resultsPanel.style.display = 'block';
+        errorPanel.style.display = 'block';
+        errorPanel.textContent = 'Network error: ' + err.message;
+        document.getElementById('testStatusBadge').textContent = 'Error';
+        document.getElementById('testStatusBadge').className = 'status-badge status-5xx';
+        document.getElementById('testExecTime').textContent = '';
+        document.getElementById('testResponseBody').textContent = '';
+        document.getElementById('testOutputSection').style.display = 'none';
+      })
+      .finally(function() {
+        btn.disabled = false;
+        btn.classList.remove('btn-loading');
+        btn.innerHTML = '&#9654; Send Test';
+      });
+    }
+
+    function escapeHtml(str) {
+      var div = document.createElement('div');
+      div.appendChild(document.createTextNode(str));
+      return div.innerHTML;
     }
   </script>
 </body>
