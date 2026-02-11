@@ -1568,7 +1568,7 @@ async function handleRobotSettings(req, res) {
 
       // Send back to Bitrix24
       try {
-        console.log('Preparing to save with finish()...');
+        console.log('Preparing to save settings...');
 
         // Prepare all property values
         const propertyValues = {
@@ -1583,10 +1583,24 @@ async function handleRobotSettings(req, res) {
 
         console.log('Property values to save:', propertyValues);
 
-        // Call finish with all property values
-        BX24.placement.call('finish', propertyValues);
+        // For robot placement, use saveSettings instead of finish
+        console.log('Calling BX24.placement.call("saveSettings", ...)');
 
-        console.log('Finish called with property values');
+        BX24.placement.call('saveSettings', propertyValues, function(result) {
+          console.log('saveSettings result:', result);
+          if (result && result.error) {
+            console.error('Save error:', result.error);
+            alert('Error saving: ' + result.error);
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+          } else {
+            console.log('Settings saved successfully, closing...');
+            // Close the placement after successful save
+            BX24.placement.call('close');
+          }
+        });
+
+        console.log('saveSettings called with callback');
       } catch (error) {
         console.error('Error saving config:', error);
         submitBtn.disabled = false;
