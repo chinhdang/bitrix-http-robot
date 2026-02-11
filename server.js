@@ -232,7 +232,7 @@ app.post('/admin', async (req, res) => {
 });
 
 // Serve Vue SPA static assets
-app.use('/admin-assets', express.static(path.join(__dirname, 'admin-ui', 'dist', 'assets')));
+app.use('/admin-assets', express.static(path.join(__dirname, 'admin-ui', 'dist')));
 
 // Admin API
 app.use('/api/admin', adminApiRouter);
