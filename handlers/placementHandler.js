@@ -1568,12 +1568,20 @@ async function handleRobotSettings(req, res) {
 
       // Send back to Bitrix24
       try {
-        console.log('Calling BX24.placement.call("finish", {config: ...})');
-        BX24.placement.call('finish', {
-          config: configString
-        }, function(result) {
-          console.log('Placement finish result:', result);
+        console.log('Setting property value...');
+
+        // Set the config property value
+        BX24.placement.call('setPropertyValue', {
+          property: 'config',
+          value: configString
         });
+
+        console.log('Config property set, calling finish...');
+
+        // Close the placement and save
+        BX24.placement.call('finish');
+
+        console.log('Finish called successfully');
       } catch (error) {
         console.error('Error saving config:', error);
         submitBtn.disabled = false;
