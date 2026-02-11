@@ -1568,41 +1568,41 @@ async function handleRobotSettings(req, res) {
 
       // Send back to Bitrix24
       try {
-        console.log('Preparing to save settings...');
+        console.log('Preparing to set property values individually...');
 
-        // Prepare all property values
-        const propertyValues = {
-          // Store full config as JSON
-          config: configString,
-
-          // Also set individual properties for backward compatibility
-          url: config.url,
-          method: config.method,
-          timeout: config.timeout
-        };
-
-        console.log('Property values to save:', propertyValues);
-
-        // For robot placement, use saveSettings instead of finish
-        console.log('Calling BX24.placement.call("saveSettings", ...)');
-
-        BX24.placement.call('saveSettings', propertyValues, function(result) {
-          console.log('saveSettings result:', result);
-          if (result && result.error) {
-            console.error('Save error:', result.error);
-            alert('Error saving: ' + result.error);
-            submitBtn.disabled = false;
-            submitBtn.textContent = originalText;
-          } else {
-            console.log('Settings saved successfully, closing...');
-            // Close the placement after successful save
-            BX24.placement.call('close');
-          }
+        // Set each property individually - this is the correct way for robot placement
+        console.log('Setting config property:', configString.substring(0, 100) + '...');
+        BX24.placement.call('setPropertyValue', {
+          property: 'config',
+          value: configString
         });
 
-        console.log('saveSettings called with callback');
+        console.log('Setting url property:', config.url);
+        BX24.placement.call('setPropertyValue', {
+          property: 'url',
+          value: config.url
+        });
+
+        console.log('Setting method property:', config.method);
+        BX24.placement.call('setPropertyValue', {
+          property: 'method',
+          value: config.method
+        });
+
+        console.log('Setting timeout property:', config.timeout);
+        BX24.placement.call('setPropertyValue', {
+          property: 'timeout',
+          value: config.timeout
+        });
+
+        console.log('All properties set. Closing placement...');
+
+        // Close the placement - parent form will handle the actual save
+        BX24.placement.call('close');
+
+        console.log('Placement closed. User must now click the green SAVE button to persist.');
       } catch (error) {
-        console.error('Error saving config:', error);
+        console.error('Error setting properties:', error);
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
         alert('Failed to save configuration. Please try again.');
