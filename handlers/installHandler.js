@@ -4,6 +4,8 @@
  */
 
 const logger = require('../utils/logger');
+const { getPool } = require('../db');
+const accountService = require('../services/account-service');
 
 /**
  * Handle app installation
@@ -16,6 +18,20 @@ async function handleInstall(req, res) {
       event,
       domain: auth?.domain
     });
+
+    // Upsert account in DB
+    if (getPool() && auth) {
+      const memberId = auth.member_id || auth.MEMBER_ID;
+      const domain = auth.domain || auth.DOMAIN;
+      if (memberId) {
+        try {
+          await accountService.upsertAccount(memberId, domain || 'unknown');
+          logger.info('Account upserted on install', { memberId, domain });
+        } catch (err) {
+          logger.error('Failed to upsert account on install', { error: err.message });
+        }
+      }
+    }
 
     res.json({
       success: true,

@@ -2,6 +2,9 @@ const { makeHttpRequest } = require('../services/httpRequest');
 const { sendBizprocEvent } = require('../services/bitrixApi');
 const { validateProperties } = require('../utils/validation');
 const logger = require('../utils/logger');
+const { checkQuota } = require('../services/quota-service');
+const { logRequest } = require('../services/request-log-service');
+const { getPool } = require('../db');
 
 /**
  * Extract a value from an object using dot-notation path
@@ -135,6 +138,31 @@ async function executeHttpRequest(req, res) {
       throw new Error('auth is required');
     }
 
+    // Quota check (fail-open: DB errors won't block execution)
+    let quotaResult = null;
+    if (getPool()) {
+      const memberId = auth.member_id || auth.MEMBER_ID;
+      const domain = auth.domain || auth.DOMAIN;
+      if (memberId) {
+        quotaResult = await checkQuota(memberId, domain);
+        if (!quotaResult.allowed) {
+          logger.warn('Quota exceeded', { memberId, usage: quotaResult.usage, quota: quotaResult.quota });
+          await sendBizprocEvent({
+            event_token,
+            return_values: {
+              responseBody: '',
+              statusCode: 0,
+              responseHeaders: '{}',
+              error: `Monthly quota exceeded (${quotaResult.usage}/${quotaResult.quota}). Please upgrade your plan.`
+            },
+            log_message: `Quota exceeded: ${quotaResult.usage}/${quotaResult.quota} requests used this month`,
+            auth
+          });
+          return res.json({ success: false, error: 'Quota exceeded' });
+        }
+      }
+    }
+
     // Validate properties
     const validation = validateProperties(properties || {});
     if (!validation.valid) {
@@ -244,6 +272,19 @@ async function executeHttpRequest(req, res) {
 
     logger.info('bizproc.event.send response', { event_token, bizprocResult });
 
+    // Log request to DB (fire-and-forget)
+    if (quotaResult && quotaResult.accountId) {
+      logRequest({
+        accountId: quotaResult.accountId,
+        url: requestConfig.url,
+        method: requestConfig.method,
+        statusCode: response.status,
+        success: response.status >= 200 && response.status < 400,
+        executionTime,
+        errorMessage: null
+      });
+    }
+
     // Respond to Bitrix24 immediately
     res.json({
       success: true,
@@ -266,6 +307,19 @@ async function executeHttpRequest(req, res) {
       responseHeaders: '{}',
       error: error.message || 'Unknown error occurred'
     };
+
+    // Log failed request to DB (fire-and-forget)
+    if (quotaResult && quotaResult.accountId) {
+      logRequest({
+        accountId: quotaResult.accountId,
+        url: req.body.properties?.config ? (JSON.parse(req.body.properties.config).url || 'unknown') : 'unknown',
+        method: req.body.properties?.config ? (JSON.parse(req.body.properties.config).method || 'GET') : 'GET',
+        statusCode: 0,
+        success: false,
+        executionTime,
+        errorMessage: error.message
+      });
+    }
 
     // Try to send error back to Bitrix24
     try {

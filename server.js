@@ -1,8 +1,13 @@
 const express = require('express');
+const path = require('path');
+const fs = require('fs');
 const bodyParser = require('body-parser');
 const { executeHttpRequest, extractJsonPath, buildRequestHeaders, buildRequestBody } = require('./handlers/executeHandler');
 const { handleInstall, handleUninstall } = require('./handlers/installHandler');
 const { handleRobotSettings } = require('./handlers/placementHandler');
+const adminApiRouter = require('./routes/admin-api');
+const { initDb, closeDb } = require('./db');
+const accountService = require('./services/account-service');
 const logger = require('./utils/logger');
 require('dotenv').config();
 
@@ -187,6 +192,51 @@ app.get('/', (req, res) => {
   });
 });
 
+// Admin page — Bitrix24 POSTs here when user opens the app from left menu
+app.post('/admin', async (req, res) => {
+  try {
+    const { DOMAIN, AUTH_ID, REFRESH_ID, member_id, LANG } = req.body;
+
+    // Upsert account if DB is available
+    if (require('./db').getPool() && member_id && DOMAIN) {
+      try {
+        await accountService.upsertAccount(member_id, DOMAIN);
+      } catch (err) {
+        logger.error('Admin page: account upsert failed', { error: err.message });
+      }
+    }
+
+    // Read the built Vue SPA index.html
+    const indexPath = path.join(__dirname, 'admin-ui', 'dist', 'index.html');
+    if (!fs.existsSync(indexPath)) {
+      return res.status(500).send('Admin UI not built. Run: cd admin-ui && npm run build');
+    }
+
+    let html = fs.readFileSync(indexPath, 'utf8');
+
+    // Inject auth context into the page
+    const authScript = `<script>window.__B24_AUTH__=${JSON.stringify({
+      domain: DOMAIN || '',
+      authId: AUTH_ID || '',
+      refreshId: REFRESH_ID || '',
+      memberId: member_id || '',
+      lang: LANG || 'en'
+    })};</script>`;
+
+    html = html.replace('</head>', authScript + '</head>');
+    res.type('html').send(html);
+  } catch (err) {
+    logger.error('Admin page error', { error: err.message });
+    res.status(500).send('Error loading admin page');
+  }
+});
+
+// Serve Vue SPA static assets
+app.use('/admin-assets', express.static(path.join(__dirname, 'admin-ui', 'dist', 'assets')));
+
+// Admin API
+app.use('/api/admin', adminApiRouter);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   logger.error('Unhandled error', {
@@ -204,6 +254,12 @@ app.use((err, req, res, next) => {
 // Bind to 0.0.0.0 for Railway/Docker compatibility
 const HOST = process.env.HOST || '0.0.0.0';
 
+// Initialize DB then start server
+initDb().then(dbOk => {
+  if (dbOk) logger.info('Database initialized');
+  else logger.warn('Running without database');
+});
+
 const server = app.listen(PORT, HOST, () => {
   logger.info(`Bitrix24 HTTP Request Robot handler running on ${HOST}:${PORT}`, {
     host: HOST,
@@ -215,7 +271,8 @@ const server = app.listen(PORT, HOST, () => {
 // Graceful shutdown
 process.on('SIGTERM', () => {
   logger.info('SIGTERM signal received: closing HTTP server');
-  server.close(() => {
+  server.close(async () => {
+    await closeDb();
     logger.info('HTTP server closed');
     process.exit(0);
   });
