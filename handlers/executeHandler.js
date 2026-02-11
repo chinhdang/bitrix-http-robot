@@ -172,7 +172,7 @@ async function executeHttpRequest(req, res) {
     await sendBizprocEvent({
       event_token: event_token,
       return_values: returnValues,
-      log_message: `HTTP ${requestConfig.method} request to ${properties.url} completed with status ${response.status} in ${executionTime}ms`,
+      log_message: `HTTP ${requestConfig.method} request to ${config.url} completed with status ${response.status} in ${executionTime}ms`,
       auth: auth
     });
 

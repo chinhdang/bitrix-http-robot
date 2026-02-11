@@ -28,80 +28,8 @@ const robotConfig = {
         'en': 'Configuration (JSON)',
         'ru': 'Конфигурация (JSON)'
       },
-      Description: {
-        'en': 'Complete configuration from custom UI',
-        'ru': 'Полная конфигурация из пользовательского интерфейса'
-      },
       Type: 'text',
       Required: 'N'
-    },
-    url: {
-      Name: {
-        'en': 'URL',
-        'ru': 'URL'
-      },
-      Description: {
-        'en': 'Target URL for the HTTP request',
-        'ru': 'URL адрес для HTTP запроса'
-      },
-      Type: 'string',
-      Required: 'N'
-    },
-    method: {
-      Name: {
-        'en': 'HTTP Method',
-        'ru': 'HTTP Метод'
-      },
-      Description: {
-        'en': 'HTTP method to use',
-        'ru': 'HTTP метод для использования'
-      },
-      Type: 'select',
-      Required: 'N',
-      Default: 'GET',
-      Options: {
-        'GET': 'GET',
-        'POST': 'POST',
-        'PUT': 'PUT',
-        'DELETE': 'DELETE'
-      }
-    },
-    headers: {
-      Name: {
-        'en': 'Headers (JSON)',
-        'ru': 'Заголовки (JSON)'
-      },
-      Description: {
-        'en': 'Request headers as JSON object. Example: {"Content-Type": "application/json", "Authorization": "Bearer token"}',
-        'ru': 'Заголовки запроса в формате JSON. Пример: {"Content-Type": "application/json", "Authorization": "Bearer token"}'
-      },
-      Type: 'text',
-      Required: 'N'
-    },
-    body: {
-      Name: {
-        'en': 'Request Body',
-        'ru': 'Тело запроса'
-      },
-      Description: {
-        'en': 'Request body content (for POST/PUT requests)',
-        'ru': 'Содержимое тела запроса (для POST/PUT запросов)'
-      },
-      Type: 'text',
-      Required: 'N'
-    },
-    timeout: {
-      Name: {
-        'en': 'Timeout (ms)',
-        'ru': 'Таймаут (мс)'
-      },
-      Description: {
-        'en': 'Request timeout in milliseconds (default: 30000, max: 300000)',
-        'ru': 'Таймаут запроса в миллисекундах (по умолчанию: 30000, макс: 300000)'
-      },
-      Type: 'int',
-      Required: 'N',
-      Default: '30000'
     }
   },
   RETURN_PROPERTIES: {

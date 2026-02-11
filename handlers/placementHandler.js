@@ -16,6 +16,23 @@ async function handleRobotSettings(req, res) {
       domain: req.body.DOMAIN
     });
 
+    // Parse saved config from POST body (server-side)
+    let savedConfig = null;
+    try {
+      if (req.body.PLACEMENT_OPTIONS) {
+        const options = typeof req.body.PLACEMENT_OPTIONS === 'string'
+          ? JSON.parse(req.body.PLACEMENT_OPTIONS)
+          : req.body.PLACEMENT_OPTIONS;
+        logger.info('PLACEMENT_OPTIONS parsed', { options });
+        if (options.current_values && options.current_values.config) {
+          savedConfig = JSON.parse(options.current_values.config);
+          logger.info('Loaded saved config', { savedConfig });
+        }
+      }
+    } catch (e) {
+      logger.warn('Could not parse saved config from PLACEMENT_OPTIONS', { error: e.message });
+    }
+
     // Return custom HTML interface
     res.send(`
 <!DOCTYPE html>
@@ -759,8 +776,9 @@ async function handleRobotSettings(req, res) {
   </style>
 </head>
 <body>
+  <script>window.__SAVED_CONFIG__ = ${JSON.stringify(savedConfig)};</script>
   <div class="container">
-    <form id="configForm" action="javascript:void(0);" method="post" onsubmit="return false;">
+    <form id="configForm" action="javascript:void(0);" onsubmit="return false;">
       <!-- Hidden inputs removed - not needed for onSave event pattern -->
 
       <!-- Tabs Navigation -->
@@ -776,7 +794,7 @@ async function handleRobotSettings(req, res) {
         <div class="form-group">
           <label for="url">URL *</label>
           <div class="input-wrapper">
-            <input type="text" id="url" placeholder="https://api.example.com/endpoint" required maxlength="2000" oninput="updateCharCounter(this, 'url-counter')" aria-describedby="url-help" aria-required="true">
+            <input type="text" id="url" placeholder="https://api.example.com/endpoint" required maxlength="2000" oninput="updateCharCounter(this, 'url-counter'); saveToPlacement();" aria-describedby="url-help" aria-required="true">
             <span id="url-counter" class="char-counter" aria-live="polite">0/2000</span>
           </div>
           <button type="button" class="btn-dots" onclick="showVariablePicker('url')" title="Insert variable" aria-label="Insert variable into URL" style="position: absolute; right: 24px; margin-top: -38px;">⋯</button>
@@ -786,7 +804,7 @@ async function handleRobotSettings(req, res) {
         <div class="form-row-2col">
           <div class="form-group">
             <label for="method">HTTP Method *</label>
-            <select id="method" required>
+            <select id="method" required onchange="saveToPlacement()">
               <option value="GET">GET</option>
               <option value="POST">POST</option>
               <option value="PUT">PUT</option>
@@ -796,7 +814,7 @@ async function handleRobotSettings(req, res) {
 
           <div class="form-group">
             <label for="timeout">Timeout (ms)</label>
-            <input type="number" id="timeout" value="30000" min="1000" max="300000">
+            <input type="number" id="timeout" value="30000" min="1000" max="300000" onchange="saveToPlacement()">
           </div>
         </div>
       </div>
@@ -849,7 +867,7 @@ async function handleRobotSettings(req, res) {
           <div class="form-group">
             <label for="rawBody">Raw Body Content</label>
             <div class="input-wrapper">
-              <textarea id="rawBody" placeholder='{"key": "value"} or any raw content' rows="4" maxlength="10000" oninput="updateCharCounter(this, 'rawBody-counter')"></textarea>
+              <textarea id="rawBody" placeholder='{"key": "value"} or any raw content' rows="4" maxlength="10000" oninput="updateCharCounter(this, 'rawBody-counter'); saveToPlacement();"></textarea>
               <span id="rawBody-counter" class="char-counter">0/10000</span>
             </div>
             <button type="button" class="btn-dots" onclick="showVariablePicker('rawBody')" title="Insert variable" style="position: absolute; right: 24px; margin-top: -94px;">⋯</button>
@@ -862,7 +880,7 @@ async function handleRobotSettings(req, res) {
       <div id="tab-auth" class="tab-content">
         <div class="form-group">
           <label for="authType">Authorization Type</label>
-          <select id="authType" onchange="switchAuthType(this.value)">
+          <select id="authType" onchange="switchAuthType(this.value); saveToPlacement();">
             <option value="none">No Auth</option>
             <option value="bearer">Bearer Token</option>
             <option value="basic">Basic Auth</option>
@@ -876,7 +894,7 @@ async function handleRobotSettings(req, res) {
             <label for="bearerToken">Bearer Token</label>
             <div class="input-with-button">
               <div class="input-wrapper">
-                <input type="text" id="bearerToken" placeholder="Enter token" maxlength="500" oninput="updateCharCounter(this, 'bearer-counter')">
+                <input type="text" id="bearerToken" placeholder="Enter token" maxlength="500" oninput="updateCharCounter(this, 'bearer-counter'); saveToPlacement();">
                 <span id="bearer-counter" class="char-counter">0/500</span>
               </div>
               <button type="button" class="btn-dots" onclick="showVariablePicker('bearerToken')" title="Insert variable">⋯</button>
@@ -889,14 +907,14 @@ async function handleRobotSettings(req, res) {
           <div class="form-group">
             <label for="basicUsername">Username</label>
             <div class="input-with-button">
-              <input type="text" id="basicUsername" placeholder="Username">
+              <input type="text" id="basicUsername" placeholder="Username" oninput="saveToPlacement()">
               <button type="button" class="btn-dots" onclick="showVariablePicker('basicUsername')" title="Insert variable">⋯</button>
             </div>
           </div>
           <div class="form-group">
             <label for="basicPassword">Password</label>
             <div class="input-with-button">
-              <input type="password" id="basicPassword" placeholder="Password">
+              <input type="password" id="basicPassword" placeholder="Password" oninput="saveToPlacement()">
               <button type="button" class="btn-dots" onclick="showVariablePicker('basicPassword')" title="Insert variable">⋯</button>
             </div>
           </div>
@@ -906,13 +924,13 @@ async function handleRobotSettings(req, res) {
         <div id="auth-api-key" class="auth-section" style="display: none;">
           <div class="form-group">
             <label for="apiKeyName">Key Name</label>
-            <input type="text" id="apiKeyName" placeholder="e.g., X-API-Key, api_key">
+            <input type="text" id="apiKeyName" placeholder="e.g., X-API-Key, api_key" oninput="saveToPlacement()">
           </div>
           <div class="form-group">
             <label for="apiKeyValue">Key Value</label>
             <div class="input-with-button">
               <div class="input-wrapper">
-                <input type="text" id="apiKeyValue" placeholder="Enter API key" maxlength="500" oninput="updateCharCounter(this, 'apikey-counter')">
+                <input type="text" id="apiKeyValue" placeholder="Enter API key" maxlength="500" oninput="updateCharCounter(this, 'apikey-counter'); saveToPlacement();">
                 <span id="apikey-counter" class="char-counter">0/500</span>
               </div>
               <button type="button" class="btn-dots" onclick="showVariablePicker('apiKeyValue')" title="Insert variable">⋯</button>
@@ -920,7 +938,7 @@ async function handleRobotSettings(req, res) {
           </div>
           <div class="form-group">
             <label for="apiKeyLocation">Add to</label>
-            <select id="apiKeyLocation">
+            <select id="apiKeyLocation" onchange="saveToPlacement()">
               <option value="header">Header</option>
               <option value="query">Query Parameter</option>
             </select>
@@ -929,10 +947,7 @@ async function handleRobotSettings(req, res) {
       </div>
 
       <div class="actions">
-        <button type="submit" class="btn btn-success" aria-label="Save configuration">
-          Save
-          <span class="keyboard-hint">⌘S</span>
-        </button>
+        <span class="help-text" style="flex: 1; align-self: center;">Configuration is auto-saved. Click Bitrix's "SAVE" button to finish.</span>
         <button type="button" class="btn btn-secondary" onclick="BX24.closeApplication()" aria-label="Cancel and close">
           Cancel
           <span class="keyboard-hint">Esc</span>
@@ -1019,6 +1034,8 @@ async function handleRobotSettings(req, res) {
       // Show/hide sections
       document.getElementById('body-form-data').style.display = type === 'form-data' ? 'block' : 'none';
       document.getElementById('body-raw').style.display = type === 'raw' ? 'block' : 'none';
+
+      saveToPlacement();
     }
 
     // Switch auth type
@@ -1032,10 +1049,12 @@ async function handleRobotSettings(req, res) {
 
       // Show selected section
       if (type !== 'none') {
-        const section = document.getElementById('auth-' + type);
+        var section = document.getElementById('auth-' + type);
         if (section) section.style.display = 'block';
       }
     }
+
+    // Note: saveToPlacement is called from the onchange handler on authType select
 
     // Add header row
     function addHeaderRow(key = '', value = '') {
@@ -1057,8 +1076,8 @@ async function handleRobotSettings(req, res) {
 
       const rowHtml = \`
         <div class="header-row" id="\${rowId}">
-          <input type="text" placeholder="Header Name" value="\${key}" onchange="updateHeaderRow('\${rowId}', 'key', this.value)">
-          <input type="text" placeholder="Header Value" value="\${value}" id="header_val_\${rowId}" onchange="updateHeaderRow('\${rowId}', 'value', this.value)">
+          <input type="text" placeholder="Header Name" value="\${key}" onchange="updateHeaderRow('\${rowId}', 'key', this.value); saveToPlacement();" oninput="updateHeaderRow('\${rowId}', 'key', this.value); saveToPlacement();">
+          <input type="text" placeholder="Header Value" value="\${value}" id="header_val_\${rowId}" onchange="updateHeaderRow('\${rowId}', 'value', this.value); saveToPlacement();" oninput="updateHeaderRow('\${rowId}', 'value', this.value); saveToPlacement();">
           <button type="button" class="btn-dots" onclick="showVariablePicker('header_val_\${rowId}')" title="Insert variable">⋯</button>
           <button type="button" class="btn btn-danger" onclick="removeHeaderRow('\${rowId}')" title="Remove">×</button>
         </div>
@@ -1089,14 +1108,15 @@ async function handleRobotSettings(req, res) {
         document.getElementById('headersContainer').innerHTML =
           '<div class="empty-state">Click "+ Add Header" to add request headers</div>';
       }
+
+      saveToPlacement();
     }
 
     // Keyboard shortcuts handler
     document.addEventListener('keydown', function(e) {
-      // Cmd/Ctrl + S to save
+      // Cmd/Ctrl + S - prevent default (auto-saved)
       if ((e.metaKey || e.ctrlKey) && e.key === 's') {
         e.preventDefault();
-        document.getElementById('configForm').dispatchEvent(new Event('submit'));
       }
 
       // Escape to cancel/close
@@ -1200,79 +1220,89 @@ async function handleRobotSettings(req, res) {
       loadConfiguration();
 
       // Initialize character counters
-      setTimeout(() => {
+      setTimeout(function() {
         updateCharCounter(document.getElementById('url'), 'url-counter');
-        updateCharCounter(document.getElementById('headers'), 'headers-counter');
         updateCharCounter(document.getElementById('rawBody'), 'rawBody-counter');
       }, 100);
     });
 
-    // Load configuration from placement options
+    // Load configuration from server-injected data or fallback to client-side
     function loadConfiguration() {
-      const placementOptions = BX24.placement.info();
-      console.log('Placement options:', placementOptions);
-      console.log('Full placement info:', JSON.stringify(placementOptions, null, 2));
+      // Try server-injected config first (most reliable)
+      let config = window.__SAVED_CONFIG__;
 
-      // If we have saved data, load it
-      // Check for config in options.current_values.config (saved property value)
-      if (placementOptions.options && placementOptions.options.current_values && placementOptions.options.current_values.config) {
+      // Fallback: try client-side placement info
+      if (!config) {
         try {
-          console.log('Loading config from current_values.config:', placementOptions.options.current_values.config);
-          const config = JSON.parse(placementOptions.options.current_values.config);
-          console.log('Parsed config:', config);
-
-          if (config.url) document.getElementById('url').value = config.url;
-          if (config.method) document.getElementById('method').value = config.method;
-          if (config.timeout) document.getElementById('timeout').value = config.timeout;
-
-          // Load headers
-          if (config.headers && Array.isArray(config.headers)) {
-            config.headers.forEach(header => {
-              addHeaderRow(header.key, header.value);
-            });
-          }
-
-          // Load body type and data
-          if (config.bodyType) {
-            currentBodyType = config.bodyType;
-            const segments = document.querySelectorAll('.segment');
-            segments.forEach(seg => {
-              seg.classList.remove('active');
-              if (seg.textContent.toLowerCase().replace(' ', '-') === config.bodyType) {
-                seg.classList.add('active');
-              }
-            });
-
-            if (config.bodyType === 'form-data' && config.formData) {
-              document.getElementById('body-form-data').style.display = 'block';
-              config.formData.forEach(row => {
-                addFormDataRow(row.key, row.value);
-              });
-            } else if (config.bodyType === 'raw' && config.rawBody) {
-              document.getElementById('body-raw').style.display = 'block';
-              document.getElementById('rawBody').value = config.rawBody;
-            }
-          }
-
-          // Load auth
-          if (config.authType) {
-            document.getElementById('authType').value = config.authType;
-            switchAuthType(config.authType);
-
-            if (config.authType === 'bearer' && config.bearerToken) {
-              document.getElementById('bearerToken').value = config.bearerToken;
-            } else if (config.authType === 'basic') {
-              if (config.basicUsername) document.getElementById('basicUsername').value = config.basicUsername;
-              if (config.basicPassword) document.getElementById('basicPassword').value = config.basicPassword;
-            } else if (config.authType === 'api-key') {
-              if (config.apiKeyName) document.getElementById('apiKeyName').value = config.apiKeyName;
-              if (config.apiKeyValue) document.getElementById('apiKeyValue').value = config.apiKeyValue;
-              if (config.apiKeyLocation) document.getElementById('apiKeyLocation').value = config.apiKeyLocation;
-            }
+          const placementOptions = BX24.placement.info();
+          console.log('Fallback: placement info:', placementOptions);
+          if (placementOptions.options && placementOptions.options.current_values && placementOptions.options.current_values.config) {
+            config = JSON.parse(placementOptions.options.current_values.config);
           }
         } catch (e) {
-          console.error('Error loading config:', e);
+          console.warn('Fallback placement info failed:', e);
         }
+      }
+
+      if (!config) {
+        console.log('No saved config found - first open');
+        return;
+      }
+
+      console.log('Loading saved config:', config);
+
+      try {
+        if (config.url) document.getElementById('url').value = config.url;
+        if (config.method) document.getElementById('method').value = config.method;
+        if (config.timeout) document.getElementById('timeout').value = config.timeout;
+
+        // Load headers
+        if (config.headers && Array.isArray(config.headers)) {
+          config.headers.forEach(header => {
+            addHeaderRow(header.key, header.value);
+          });
+        }
+
+        // Load body type and data
+        if (config.bodyType) {
+          currentBodyType = config.bodyType;
+          var segments = document.querySelectorAll('.segment');
+          segments.forEach(function(seg) {
+            seg.classList.remove('active');
+            if (seg.textContent.toLowerCase().replace(' ', '-') === config.bodyType) {
+              seg.classList.add('active');
+            }
+          });
+
+          if (config.bodyType === 'form-data' && config.formData) {
+            document.getElementById('body-form-data').style.display = 'block';
+            config.formData.forEach(function(row) {
+              addFormDataRow(row.key, row.value);
+            });
+          } else if (config.bodyType === 'raw' && config.rawBody) {
+            document.getElementById('body-raw').style.display = 'block';
+            document.getElementById('rawBody').value = config.rawBody;
+          }
+        }
+
+        // Load auth
+        if (config.authType) {
+          document.getElementById('authType').value = config.authType;
+          switchAuthType(config.authType);
+
+          if (config.authType === 'bearer' && config.bearerToken) {
+            document.getElementById('bearerToken').value = config.bearerToken;
+          } else if (config.authType === 'basic') {
+            if (config.basicUsername) document.getElementById('basicUsername').value = config.basicUsername;
+            if (config.basicPassword) document.getElementById('basicPassword').value = config.basicPassword;
+          } else if (config.authType === 'api-key') {
+            if (config.apiKeyName) document.getElementById('apiKeyName').value = config.apiKeyName;
+            if (config.apiKeyValue) document.getElementById('apiKeyValue').value = config.apiKeyValue;
+            if (config.apiKeyLocation) document.getElementById('apiKeyLocation').value = config.apiKeyLocation;
+          }
+        }
+      } catch (e) {
+        console.error('Error loading config:', e);
       }
     }
 
@@ -1296,8 +1326,8 @@ async function handleRobotSettings(req, res) {
 
       const rowHtml = \`
         <div class="form-data-row" id="\${rowId}">
-          <input type="text" placeholder="Key" value="\${key}" onchange="updateFormDataRow('\${rowId}', 'key', this.value)">
-          <input type="text" placeholder="Value (can use {{Document:FIELD}})" value="\${value}" id="formdata_\${rowId}" onchange="updateFormDataRow('\${rowId}', 'value', this.value)">
+          <input type="text" placeholder="Key" value="\${key}" onchange="updateFormDataRow('\${rowId}', 'key', this.value); saveToPlacement();" oninput="updateFormDataRow('\${rowId}', 'key', this.value); saveToPlacement();">
+          <input type="text" placeholder="Value (can use {{Document:FIELD}})" value="\${value}" id="formdata_\${rowId}" onchange="updateFormDataRow('\${rowId}', 'value', this.value); saveToPlacement();" oninput="updateFormDataRow('\${rowId}', 'value', this.value); saveToPlacement();">
           <button type="button" class="btn-dots" onclick="showVariablePicker('formdata_\${rowId}')" title="Insert variable">⋯</button>
           <button type="button" class="btn btn-danger" onclick="removeFormDataRow('\${rowId}')" title="Remove">×</button>
         </div>
@@ -1328,6 +1358,8 @@ async function handleRobotSettings(req, res) {
         document.getElementById('formDataContainer').innerHTML =
           '<div class="empty-state">Click "+ Add Field" to add form data fields</div>';
       }
+
+      saveToPlacement();
     }
 
     let currentFieldId = null;
@@ -1460,6 +1492,8 @@ async function handleRobotSettings(req, res) {
         // Set cursor position after inserted variable
         field.selectionStart = field.selectionEnd = start + variable.length;
         field.focus();
+
+        saveToPlacement();
       }
     }
 
@@ -1544,41 +1578,20 @@ async function handleRobotSettings(req, res) {
       };
     }
 
-    // Handle form submission
-    document.getElementById('configForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-
-      // Validate form
-      if (!validateForm()) {
-        return;
-      }
-
-      console.log('Form validated. Setting property values...');
-
-      // Get current configuration
-      const config = getCurrentConfig();
-      const configString = JSON.stringify(config);
-
-      console.log('Current config:', config);
-
-      // Call setPropertyValue with ALL properties at once (correct pattern from docs)
-      const propertyValues = {
-        config: configString,
-        url: config.url,
-        method: config.method,
-        timeout: config.timeout
-      };
-
-      console.log('Calling BX24.placement.call("setPropertyValue", ...)', propertyValues);
-
-      BX24.placement.call('setPropertyValue', propertyValues);
-
-      console.log('Property values set successfully!');
-      console.log('Now click the green "LƯU" button to save the robot.');
-
-      // Show success message
-      alert('Configuration updated!\n\nNow click the green "LƯU" (Save) button at the bottom to save the robot.');
-    });
+    // Debounced auto-save to placement on every input change
+    var saveTimeout = null;
+    function saveToPlacement() {
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(function() {
+        var config = getCurrentConfig();
+        var configString = JSON.stringify(config);
+        console.log('Auto-saving config to placement:', config);
+        BX24.placement.call('setPropertyValue', {
+          config: configString
+        });
+        console.log('setPropertyValue called with config');
+      }, 300);
+    }
   </script>
 </body>
 </html>
