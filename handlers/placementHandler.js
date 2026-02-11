@@ -268,12 +268,34 @@ async function handleRobotSettings(req, res) {
       letter-spacing: 0.5px;
     }
 
-    .form-data-row {
+    .form-data-row, .form-data-labels {
       display: grid;
-      grid-template-columns: 1fr 2fr 32px 32px;
+      grid-template-columns: 1fr 2fr 32px 1.2fr 32px;
       gap: 6px;
       margin-bottom: 6px;
       align-items: start;
+    }
+
+    .form-data-labels {
+      margin-bottom: 2px;
+    }
+
+    .form-data-labels span {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .form-data-row .test-data-input {
+      background: var(--color-bg-tertiary);
+      border-style: dashed;
+    }
+
+    .form-data-row .test-data-input:focus {
+      background: var(--color-bg);
+      border-style: solid;
     }
 
     .form-data-row input {
@@ -963,6 +985,13 @@ async function handleRobotSettings(req, res) {
               <button type="button" class="btn btn-primary" onclick="addFormDataRow()">+ Add Field</button>
             </div>
 
+            <div id="formDataLabels" class="form-data-labels" style="display: none;">
+              <span>Key</span>
+              <span>Value</span>
+              <span></span>
+              <span>Test Data</span>
+              <span></span>
+            </div>
             <div id="formDataContainer">
               <div class="empty-state">
                 Click "+ Add Field" to add form data fields
@@ -981,6 +1010,13 @@ async function handleRobotSettings(req, res) {
             </div>
             <button type="button" class="btn-dots" onclick="showVariablePicker('rawBody')" title="Insert variable" style="position: absolute; right: 24px; margin-top: -94px;">⋯</button>
             <div class="help-text">JSON, XML, or any raw body content</div>
+          </div>
+          <div class="form-group">
+            <label for="rawBodyTestData">Test Data <span style="font-weight: 400; color: var(--color-text-muted); font-size: 12px;">— used instead of above when testing</span></label>
+            <div class="input-wrapper">
+              <textarea id="rawBodyTestData" class="test-data-input" placeholder='Test body with real values (replaces raw body during test)' rows="3" maxlength="10000" oninput="updateCharCounter(this, 'rawBodyTest-counter'); saveToPlacement();" onchange="flushSave();" style="border-style: dashed; background: var(--color-bg-tertiary);"></textarea>
+              <span id="rawBodyTest-counter" class="char-counter">0/10000</span>
+            </div>
           </div>
         </div>
       </div>
@@ -1528,10 +1564,11 @@ async function handleRobotSettings(req, res) {
 
           if (config.bodyType === 'form-data' && config.formData) {
             config.formData.forEach(function(row) {
-              addFormDataRow(row.key, row.value);
+              addFormDataRow(row.key, row.value, row.testData || '');
             });
           } else if (config.bodyType === 'raw') {
             document.getElementById('rawBody').value = config.rawBody || '';
+            document.getElementById('rawBodyTestData').value = config.rawBodyTestData || '';
           }
         }
 
@@ -1564,19 +1601,21 @@ async function handleRobotSettings(req, res) {
     }
 
     // Add a form data row
-    function addFormDataRow(key = '', value = '') {
+    function addFormDataRow(key = '', value = '', testData = '') {
       const container = document.getElementById('formDataContainer');
 
-      // Remove empty state message
+      // Remove empty state message and show labels
       if (formDataRows.length === 0) {
         container.innerHTML = '';
+        document.getElementById('formDataLabels').style.display = 'grid';
       }
 
       const rowId = 'row_' + Date.now();
       const row = {
         id: rowId,
         key: key,
-        value: value
+        value: value,
+        testData: testData
       };
 
       formDataRows.push(row);
@@ -1584,8 +1623,9 @@ async function handleRobotSettings(req, res) {
       const rowHtml = \`
         <div class="form-data-row" id="\${rowId}">
           <input type="text" placeholder="Key" value="\${key}" onchange="updateFormDataRow('\${rowId}', 'key', this.value); flushSave();" oninput="updateFormDataRow('\${rowId}', 'key', this.value); saveToPlacement();">
-          <input type="text" placeholder="Value" value="\${value}" id="formdata_\${rowId}" onchange="updateFormDataRow('\${rowId}', 'value', this.value); flushSave();" oninput="updateFormDataRow('\${rowId}', 'value', this.value); saveToPlacement();">
+          <input type="text" placeholder="Value or {=Document:...}" value="\${value}" id="formdata_\${rowId}" onchange="updateFormDataRow('\${rowId}', 'value', this.value); flushSave();" oninput="updateFormDataRow('\${rowId}', 'value', this.value); saveToPlacement();">
           <button type="button" class="btn-dots" onclick="showVariablePicker('formdata_\${rowId}')" title="Insert variable">⋯</button>
+          <input type="text" class="test-data-input" placeholder="Test value" value="\${testData}" onchange="updateFormDataRow('\${rowId}', 'testData', this.value); flushSave();" oninput="updateFormDataRow('\${rowId}', 'testData', this.value); saveToPlacement();">
           <button type="button" class="btn btn-danger" onclick="removeFormDataRow('\${rowId}')" title="Remove">×</button>
         </div>
       \`;
@@ -1614,6 +1654,7 @@ async function handleRobotSettings(req, res) {
       if (formDataRows.length === 0) {
         document.getElementById('formDataContainer').innerHTML =
           '<div class="empty-state">Click "+ Add Field" to add form data fields</div>';
+        document.getElementById('formDataLabels').style.display = 'none';
       }
 
       flushSave();
@@ -1825,8 +1866,8 @@ async function handleRobotSettings(req, res) {
       if (currentBodyType === 'form-data') {
         document.querySelectorAll('#formDataContainer .form-data-row').forEach(function(rowEl) {
           var inputs = rowEl.querySelectorAll('input');
-          if (inputs.length >= 2 && inputs[0].value.trim()) {
-            formData.push({ key: inputs[0].value, value: inputs[1].value });
+          if (inputs.length >= 3 && inputs[0].value.trim()) {
+            formData.push({ key: inputs[0].value, value: inputs[1].value, testData: inputs[2].value || '' });
           }
         });
       }
@@ -1854,6 +1895,7 @@ async function handleRobotSettings(req, res) {
         bodyType: currentBodyType,
         formData: formData,
         rawBody: currentBodyType === 'raw' ? document.getElementById('rawBody').value : '',
+        rawBodyTestData: currentBodyType === 'raw' ? document.getElementById('rawBodyTestData').value : '',
         authType: currentAuthType,
         bearerToken: currentAuthType === 'bearer' ? document.getElementById('bearerToken').value : '',
         basicUsername: currentAuthType === 'basic' ? document.getElementById('basicUsername').value : '',
@@ -1896,18 +1938,22 @@ async function handleRobotSettings(req, res) {
     }
 
     // Convert all string values in config object
+    // Skip testData/rawBodyTestData — those contain real test values, not Bitrix templates
+    var skipConvertFields = { testData: true, rawBodyTestData: true };
     function convertConfigDisplayNames(config) {
       var converted = {};
       Object.keys(config).forEach(function(key) {
         var val = config[key];
-        if (typeof val === 'string') {
+        if (skipConvertFields[key]) {
+          converted[key] = val;
+        } else if (typeof val === 'string') {
           converted[key] = convertDisplayToTemplate(val);
         } else if (Array.isArray(val)) {
           converted[key] = val.map(function(item) {
             if (typeof item === 'object' && item !== null) {
               var obj = {};
               Object.keys(item).forEach(function(k) {
-                obj[k] = typeof item[k] === 'string' ? convertDisplayToTemplate(item[k]) : item[k];
+                obj[k] = (typeof item[k] === 'string' && !skipConvertFields[k]) ? convertDisplayToTemplate(item[k]) : item[k];
               });
               return obj;
             }
@@ -1968,8 +2014,24 @@ async function handleRobotSettings(req, res) {
         return;
       }
 
-      // Check for Bitrix variables
-      var configStr = JSON.stringify(config);
+      // Build test config: substitute test data values for actual values
+      var testConfig = JSON.parse(JSON.stringify(config));
+      if (testConfig.formData && Array.isArray(testConfig.formData)) {
+        testConfig.formData = testConfig.formData.map(function(row) {
+          return {
+            key: row.key,
+            value: row.testData ? row.testData : row.value
+          };
+        });
+      }
+      // Substitute raw body test data if provided
+      if (testConfig.rawBodyTestData && testConfig.rawBodyTestData.trim()) {
+        testConfig.rawBody = testConfig.rawBodyTestData;
+      }
+      delete testConfig.rawBodyTestData;
+
+      // Check for remaining Bitrix variables after test data substitution
+      var configStr = JSON.stringify(testConfig);
       var hasVars = /\\{=\\w+:\\w+\\}/.test(configStr);
       warningEl.style.display = hasVars ? 'block' : 'none';
 
@@ -1993,7 +2055,7 @@ async function handleRobotSettings(req, res) {
       fetch(baseUrl + '/bitrix-handler/test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ config: config })
+        body: JSON.stringify({ config: testConfig })
       })
       .then(function(resp) { return resp.json(); })
       .then(function(data) {

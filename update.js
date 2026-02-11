@@ -32,6 +32,8 @@ async function updateRobot() {
         USE_SUBSCRIPTION: 'Y',
         USE_PLACEMENT: 'Y',
         PLACEMENT_HANDLER: `${HANDLER_URL}/placement/robot-settings`,
+        NAME: robotConfig.NAME,
+        DESCRIPTION: robotConfig.DESCRIPTION,
         RETURN_PROPERTIES: robotConfig.RETURN_PROPERTIES
       }
     };
@@ -65,6 +67,8 @@ async function updateActivity() {
         USE_SUBSCRIPTION: 'Y',
         USE_PLACEMENT: 'Y',
         PLACEMENT_HANDLER: `${HANDLER_URL}/placement/robot-settings`,
+        NAME: robotConfig.NAME,
+        DESCRIPTION: robotConfig.DESCRIPTION,
         RETURN_PROPERTIES: robotConfig.RETURN_PROPERTIES
       }
     };
