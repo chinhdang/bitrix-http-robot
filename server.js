@@ -195,6 +195,8 @@ app.get('/', (req, res) => {
 // Admin page — Bitrix24 POSTs here when user opens the app from left menu
 app.post('/admin', async (req, res) => {
   try {
+    logger.info('Admin page POST body', { keys: Object.keys(req.body), body: req.body });
+
     const { DOMAIN, AUTH_ID, REFRESH_ID, member_id, LANG } = req.body;
 
     // Upsert account if DB is available
