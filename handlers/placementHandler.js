@@ -1184,7 +1184,7 @@ async function handleRobotSettings(req, res) {
             availableVariables = Object.keys(options.document_fields).map(key => ({
               code: key,
               name: options.document_fields[key].Name || key,
-              template: '{{Document:' + key + '}}'
+              template: '{=Document:' + key + '}'
             }));
           }
 
@@ -1194,7 +1194,7 @@ async function handleRobotSettings(req, res) {
               availableVariables.push({
                 code: key,
                 name: options.template.variables[key].Name || key,
-                template: '{{Variable:' + key + '}}'
+                template: '{=Variable:' + key + '}'
               });
             });
           }
@@ -1205,7 +1205,7 @@ async function handleRobotSettings(req, res) {
               availableVariables.push({
                 code: key,
                 name: options.template.parameters[key].Name || key,
-                template: '{{Parameter:' + key + '}}'
+                template: '{=Parameter:' + key + '}'
               });
             });
           }
@@ -1386,10 +1386,10 @@ async function handleRobotSettings(req, res) {
       if (availableVariables.length === 0) {
         console.log('No variables loaded, using defaults');
         availableVariables = [
-          { code: 'ID', name: 'Document ID', template: '{{Document:ID}}' },
-          { code: 'TITLE', name: 'Document Title', template: '{{Document:TITLE}}' },
-          { code: 'CREATED_BY', name: 'Created By', template: '{{Document:CREATED_BY}}' },
-          { code: 'MODIFIED_BY', name: 'Modified By', template: '{{Document:MODIFIED_BY}}' },
+          { code: 'ID', name: 'Document ID', template: '{=Document:ID}' },
+          { code: 'TITLE', name: 'Document Title', template: '{=Document:TITLE}' },
+          { code: 'CREATED_BY', name: 'Created By', template: '{=Document:CREATED_BY}' },
+          { code: 'MODIFIED_BY', name: 'Modified By', template: '{=Document:MODIFIED_BY}' },
         ];
       }
 
