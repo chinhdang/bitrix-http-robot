@@ -270,7 +270,7 @@ async function handleRobotSettings(req, res) {
 
     .form-data-row, .form-data-labels {
       display: grid;
-      grid-template-columns: 1fr 2fr 32px 1.2fr 32px;
+      grid-template-columns: 1fr 1.5fr 32px 1.5fr 32px;
       gap: 6px;
       margin-bottom: 6px;
       align-items: start;
