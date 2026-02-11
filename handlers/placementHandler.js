@@ -385,14 +385,6 @@ async function handleRobotSettings(req, res) {
       background: var(--color-bg-tertiary);
     }
 
-    .actions {
-      display: flex;
-      gap: 12px;
-      margin-top: var(--space-md);
-      padding-top: var(--space-md);
-      border-top: 1px solid var(--color-border-light);
-    }
-
     /* Two columns for compact fields */
     .form-row-2col {
       display: grid;
@@ -813,20 +805,14 @@ async function handleRobotSettings(req, res) {
       margin-bottom: var(--space-md);
     }
 
-    .test-results-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: var(--space-md);
-    }
-
     .status-badge {
       display: inline-block;
-      padding: 4px 12px;
+      padding: 2px 10px;
       border-radius: 20px;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       letter-spacing: -0.1px;
+      vertical-align: middle;
     }
 
     .status-badge.status-2xx {
@@ -845,6 +831,13 @@ async function handleRobotSettings(req, res) {
       color: #c62828;
     }
 
+    .test-exec-time {
+      font-size: 11px;
+      color: var(--color-text-muted);
+      vertical-align: middle;
+      margin-left: 6px;
+    }
+
     .response-body-pre {
       background: var(--color-bg-tertiary);
       border: 1px solid var(--color-border-light);
@@ -859,44 +852,6 @@ async function handleRobotSettings(req, res) {
       white-space: pre-wrap;
       word-break: break-all;
       color: var(--color-text);
-    }
-
-    .test-results-section {
-      margin-bottom: var(--space-md);
-    }
-
-    .test-results-section h4 {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--color-text);
-      margin-bottom: var(--space-sm);
-    }
-
-    .output-preview-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
-
-    .output-preview-table th {
-      text-align: left;
-      padding: 8px 12px;
-      background: var(--color-bg-tertiary);
-      border: 1px solid var(--color-border-light);
-      font-weight: 600;
-      color: var(--color-text-secondary);
-      font-size: 12px;
-    }
-
-    .output-preview-table td {
-      padding: 8px 12px;
-      border: 1px solid var(--color-border-light);
-      color: var(--color-text);
-    }
-
-    .output-preview-table td.value-null {
-      color: var(--color-text-muted);
-      font-style: italic;
     }
 
     .test-error {
@@ -1174,13 +1129,10 @@ async function handleRobotSettings(req, res) {
         <!-- Test Request Section (top) -->
         <div class="form-data-section">
           <div class="form-data-header">
-            <h3>Test Request</h3>
+            <h3>Test Request <span id="testStatusBadge" class="status-badge" style="display:none;"></span><span id="testExecTime" class="test-exec-time"></span></h3>
             <button type="button" class="btn btn-test" onclick="sendTestRequest()" id="testRequestBtn">
               &#9654; Send Test
             </button>
-          </div>
-          <div class="help-text" style="margin-top: -10px; margin-bottom: 14px;">
-            Send a test request, then click on values in the JSON response to create output mappings.
           </div>
 
           <div id="testVariableWarning" class="test-warning" style="display:none;">
@@ -1188,52 +1140,24 @@ async function handleRobotSettings(req, res) {
           </div>
 
           <div id="testResultsPanel" style="display:none;">
-            <div class="test-results-header">
-              <span class="status-badge" id="testStatusBadge">200 OK</span>
-              <span class="help-text" id="testExecTime"></span>
-            </div>
-
-            <div class="test-results-section">
-              <h4>Response Body <span class="help-text">(click a value to add mapping)</span></h4>
-              <pre class="response-body-pre" id="testResponseBody"></pre>
-            </div>
-
-            <div class="test-results-section" id="testOutputSection" style="display:none;">
-              <h4>Output Mapping Results</h4>
-              <table class="output-preview-table" id="testOutputTable">
-                <thead><tr><th>Output</th><th>Path</th><th>Value</th></tr></thead>
-                <tbody id="testOutputBody"></tbody>
-              </table>
-            </div>
-
+            <pre class="response-body-pre" id="testResponseBody"></pre>
             <div id="testErrorPanel" style="display:none;" class="test-error"></div>
           </div>
         </div>
 
         <!-- Output Mapping Section (bottom) -->
-        <div class="form-data-section" style="margin-top: 20px;">
+        <div class="form-data-section" style="margin-top: 12px;">
           <div class="form-data-header">
             <h3>Output Mapping</h3>
             <button type="button" class="btn btn-primary" onclick="addOutputMappingRow()" id="addOutputMappingBtn">+ Add Mapping</button>
           </div>
-          <div class="help-text" style="margin-bottom: 14px; margin-top: -10px;">
-            Mapped values are available as <strong>Output 1–5</strong> in subsequent workflow steps.
-          </div>
 
           <div id="outputMappingsContainer">
             <div class="empty-state">
-              Send a test request above, then click on JSON values to add mappings — or click "+ Add Mapping" to add manually.
+              Send a test request, then click on JSON values to add mappings.
             </div>
           </div>
         </div>
-      </div>
-
-      <div class="actions">
-        <span class="help-text" style="flex: 1; align-self: center;">Configuration is auto-saved. Click Bitrix's "SAVE" button to finish.</span>
-        <button type="button" class="btn btn-secondary" onclick="BX24.closeApplication()" aria-label="Cancel and close">
-          Cancel
-          <span class="keyboard-hint">Esc</span>
-        </button>
       </div>
     </form>
   </div>
@@ -2142,19 +2066,20 @@ async function handleRobotSettings(req, res) {
       .then(function(resp) { return resp.json(); })
       .then(function(data) {
         resultsPanel.style.display = 'block';
+        var badge = document.getElementById('testStatusBadge');
+        var timeEl = document.getElementById('testExecTime');
 
         if (data.success) {
-          // Status badge
-          var badge = document.getElementById('testStatusBadge');
+          // Status badge inline with title
           badge.textContent = data.statusCode + ' ' + (data.statusText || '');
           badge.className = 'status-badge';
+          badge.style.display = 'inline-block';
           if (data.statusCode >= 200 && data.statusCode < 300) badge.classList.add('status-2xx');
           else if (data.statusCode >= 300 && data.statusCode < 400) badge.classList.add('status-3xx');
           else if (data.statusCode >= 400 && data.statusCode < 500) badge.classList.add('status-4xx');
           else badge.classList.add('status-5xx');
 
-          // Execution time
-          document.getElementById('testExecTime').textContent = data.executionTime + 'ms';
+          timeEl.textContent = data.executionTime + 'ms';
 
           // Response body
           var bodyEl = document.getElementById('testResponseBody');
@@ -2166,45 +2091,20 @@ async function handleRobotSettings(req, res) {
             bodyEl.textContent = data.responseBody || '(empty)';
           }
 
-          // Output mappings
-          var outputSection = document.getElementById('testOutputSection');
-          var outputBody = document.getElementById('testOutputBody');
-          if (data.outputMappings && data.outputMappings.length > 0) {
-            outputSection.style.display = 'block';
-            outputBody.innerHTML = data.outputMappings.map(function(m) {
-              var slotNum = m.output.replace('output_', '');
-              var valueDisplay;
-              if (m.usedFallback) {
-                valueDisplay = '<span style="color:#ea580c;">' + escapeHtml(String(m.value)) + ' <em>(fallback)</em></span>';
-              } else if (m.value !== null && m.value !== undefined) {
-                valueDisplay = '<code>' + escapeHtml(String(m.value)) + '</code>';
-              } else {
-                valueDisplay = '<span style="color:var(--color-text-muted);font-style:italic;">not found</span>';
-              }
-              return '<tr><td>Output ' + slotNum + '</td><td><code>' + escapeHtml(m.path) + '</code></td><td>' + valueDisplay + '</td></tr>';
-            }).join('');
-          } else {
-            outputSection.style.display = 'none';
-          }
-
-          // Update inline previews
           updateMappingPreviews();
-
           errorPanel.style.display = 'none';
         } else {
-          // Error response
           lastTestResponseParsed = null;
           clearMappingPreviews();
-          document.getElementById('testStatusBadge').textContent = 'Error';
-          document.getElementById('testStatusBadge').className = 'status-badge status-5xx';
-          document.getElementById('testExecTime').textContent = data.executionTime ? data.executionTime + 'ms' : '';
+          badge.textContent = 'Error';
+          badge.className = 'status-badge status-5xx';
+          badge.style.display = 'inline-block';
+          timeEl.textContent = data.executionTime ? data.executionTime + 'ms' : '';
           document.getElementById('testResponseBody').textContent = '';
-          document.getElementById('testOutputSection').style.display = 'none';
           errorPanel.style.display = 'block';
           errorPanel.textContent = data.error || 'Unknown error';
         }
 
-        // Variable warning from server
         if (data.hasVariables) {
           warningEl.style.display = 'block';
         }
@@ -2215,11 +2115,12 @@ async function handleRobotSettings(req, res) {
         resultsPanel.style.display = 'block';
         errorPanel.style.display = 'block';
         errorPanel.textContent = 'Network error: ' + err.message;
-        document.getElementById('testStatusBadge').textContent = 'Error';
-        document.getElementById('testStatusBadge').className = 'status-badge status-5xx';
+        var badge = document.getElementById('testStatusBadge');
+        badge.textContent = 'Error';
+        badge.className = 'status-badge status-5xx';
+        badge.style.display = 'inline-block';
         document.getElementById('testExecTime').textContent = '';
         document.getElementById('testResponseBody').textContent = '';
-        document.getElementById('testOutputSection').style.display = 'none';
       })
       .finally(function() {
         btn.disabled = false;
