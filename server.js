@@ -34,6 +34,33 @@ app.post('/bitrix-handler/uninstall', handleUninstall);
 // Placement handler for custom robot settings UI
 app.post('/placement/robot-settings', handleRobotSettings);
 
+// Test webhook endpoint - receives any request and logs it
+const testWebhookLog = [];
+app.all('/test-webhook', (req, res) => {
+  const entry = {
+    timestamp: new Date().toISOString(),
+    method: req.method,
+    headers: req.headers,
+    query: req.query,
+    body: req.body
+  };
+  testWebhookLog.push(entry);
+  if (testWebhookLog.length > 50) testWebhookLog.shift();
+  logger.info('Test webhook received', entry);
+  res.json({ received: true, entry });
+});
+
+// View test webhook log
+app.get('/test-webhook/log', (req, res) => {
+  res.json({ count: testWebhookLog.length, entries: testWebhookLog });
+});
+
+// Clear test webhook log
+app.delete('/test-webhook/log', (req, res) => {
+  testWebhookLog.length = 0;
+  res.json({ cleared: true });
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({

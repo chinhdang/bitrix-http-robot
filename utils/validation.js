@@ -41,29 +41,36 @@ function isValidMethod(method) {
 
 /**
  * Sanitize and validate properties from Bitrix24 request
+ * Supports both direct properties and config JSON property
  */
 function validateProperties(properties) {
   const errors = [];
 
+  // If config JSON is present, parse and validate from it
+  let props = properties;
+  if (properties.config) {
+    try {
+      props = JSON.parse(properties.config);
+    } catch (e) {
+      // If config is not valid JSON, fall back to direct properties
+      props = properties;
+    }
+  }
+
   // Validate URL (required)
-  if (!properties.url) {
+  if (!props.url) {
     errors.push('URL is required');
-  } else if (!isValidUrl(properties.url)) {
+  } else if (!isValidUrl(props.url)) {
     errors.push('Invalid URL format. Must be http:// or https://');
   }
 
   // Validate method
-  if (properties.method && !isValidMethod(properties.method)) {
+  if (props.method && !isValidMethod(props.method)) {
     errors.push('Invalid HTTP method. Allowed: GET, POST, PUT, DELETE');
   }
 
-  // Validate headers JSON
-  if (properties.headers && !isValidJson(properties.headers)) {
-    errors.push('Headers must be valid JSON format');
-  }
-
   // Validate timeout
-  if (properties.timeout && !isValidTimeout(properties.timeout)) {
+  if (props.timeout && !isValidTimeout(props.timeout)) {
     errors.push('Timeout must be between 1 and 300000 milliseconds');
   }
 
