@@ -27,8 +27,8 @@ async function executeHttpRequest(req, res) {
       event_token,
       document_id,
       document_type,
-      url: properties?.url,
-      method: properties?.method
+      has_config: !!properties?.config,
+      properties_keys: Object.keys(properties || {})
     });
 
     // Validate event_token
