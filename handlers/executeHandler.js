@@ -211,18 +211,21 @@ async function executeHttpRequest(req, res) {
           if (mapping.path && mapping.output) {
             try {
               const value = extractJsonPath(responseData, mapping.path);
-              returnValues[mapping.output] = value !== undefined
-                ? (typeof value === 'object' ? JSON.stringify(value) : String(value))
-                : '';
+              if (value !== undefined) {
+                returnValues[mapping.output] = typeof value === 'object' ? JSON.stringify(value) : String(value);
+              } else {
+                returnValues[mapping.output] = mapping.fallback || '';
+              }
               logger.info('Extracted output mapping', {
                 output: mapping.output,
                 path: mapping.path,
                 rawValue: value,
+                usedFallback: value === undefined && !!mapping.fallback,
                 finalValue: returnValues[mapping.output]
               });
             } catch (e) {
               logger.warn('Failed to extract output mapping', { path: mapping.path, error: e.message });
-              returnValues[mapping.output] = '';
+              returnValues[mapping.output] = mapping.fallback || '';
             }
           }
         });

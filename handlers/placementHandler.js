@@ -779,7 +779,7 @@ async function handleRobotSettings(req, res) {
     /* Output Mapping Rows */
     .output-mapping-row {
       display: grid;
-      grid-template-columns: auto 1fr 1fr 38px;
+      grid-template-columns: auto 1fr 1fr 1fr 38px;
       gap: 8px;
       margin-bottom: 8px;
       align-items: start;
@@ -941,6 +941,57 @@ async function handleRobotSettings(req, res) {
       vertical-align: middle;
       margin-right: 6px;
     }
+
+    /* Interactive JSON */
+    .json-interactive {
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .json-key { color: #7c3aed; }
+    .json-string { color: #16a34a; }
+    .json-number { color: #2563eb; }
+    .json-bool { color: #ea580c; }
+    .json-null { color: #9ca3af; font-style: italic; }
+    .json-bracket { color: var(--color-text-muted); }
+
+    .json-clickable {
+      cursor: pointer;
+      border-radius: 3px;
+      padding: 0 2px;
+      transition: background var(--transition-fast);
+    }
+
+    .json-clickable:hover {
+      background: rgba(47, 198, 246, 0.15);
+    }
+
+    @keyframes flashAdded {
+      0% { background: rgba(22, 163, 74, 0.3); }
+      100% { background: transparent; }
+    }
+
+    .json-clickable-added {
+      animation: flashAdded 0.8s ease-out;
+    }
+
+    /* Inline Mapping Preview */
+    .mapping-preview {
+      grid-column: 2 / -1;
+      font-size: 11px;
+      font-family: 'Monaco', 'Courier New', monospace;
+      color: var(--color-text-muted);
+      padding: 2px 0 4px 0;
+      line-height: 1.4;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .preview-value { color: #16a34a; }
+    .preview-not-found { color: #9ca3af; font-style: italic; }
+    .preview-fallback { color: #ea580c; }
   </style>
 </head>
 <body>
@@ -1355,7 +1406,7 @@ async function handleRobotSettings(req, res) {
       return null;
     }
 
-    function addOutputMappingRow(path, label, output) {
+    function addOutputMappingRow(path, label, output, fallback) {
       if (!output) {
         output = getNextOutputSlot();
       }
@@ -1363,6 +1414,7 @@ async function handleRobotSettings(req, res) {
 
       path = path || '';
       label = label || '';
+      fallback = fallback || '';
 
       var container = document.getElementById('outputMappingsContainer');
 
@@ -1374,17 +1426,20 @@ async function handleRobotSettings(req, res) {
       var rowId = 'omap_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
       var slotNum = output.replace('output_', '');
 
-      outputMappingRows.push({ id: rowId, path: path, label: label, output: output });
+      outputMappingRows.push({ id: rowId, path: path, label: label, output: output, fallback: fallback });
 
       var rowHtml =
         '<div class="output-mapping-row" id="' + rowId + '">' +
           '<span class="output-slot-label">Output ' + slotNum + '</span>' +
           '<input type="text" placeholder="JSON path (e.g. data.order_id)" value="' + escapeAttr(path) + '" ' +
-            'oninput="updateOutputMapping(\\'' + rowId + '\\', \\'path\\', this.value); saveToPlacement();" ' +
+            'oninput="updateOutputMapping(\\'' + rowId + '\\', \\'path\\', this.value); saveToPlacement(); updateMappingPreviews();" ' +
             'onchange="updateOutputMapping(\\'' + rowId + '\\', \\'path\\', this.value); flushSave();">' +
           '<input type="text" placeholder="Label (memo)" value="' + escapeAttr(label) + '" ' +
             'oninput="updateOutputMapping(\\'' + rowId + '\\', \\'label\\', this.value); saveToPlacement();" ' +
             'onchange="updateOutputMapping(\\'' + rowId + '\\', \\'label\\', this.value); flushSave();">' +
+          '<input type="text" placeholder="Fallback" value="' + escapeAttr(fallback) + '" ' +
+            'oninput="updateOutputMapping(\\'' + rowId + '\\', \\'fallback\\', this.value); saveToPlacement(); updateMappingPreviews();" ' +
+            'onchange="updateOutputMapping(\\'' + rowId + '\\', \\'fallback\\', this.value); flushSave();">' +
           '<button type="button" class="btn btn-danger" onclick="removeOutputMappingRow(\\'' + rowId + '\\')" title="Remove">×</button>' +
         '</div>';
 
@@ -1625,7 +1680,7 @@ async function handleRobotSettings(req, res) {
         // Load output mappings
         if (config.outputMappings && Array.isArray(config.outputMappings)) {
           config.outputMappings.forEach(function(mapping) {
-            addOutputMappingRow(mapping.path || '', mapping.label || '', mapping.output || '');
+            addOutputMappingRow(mapping.path || '', mapping.label || '', mapping.output || '', mapping.fallback || '');
           });
         }
 
@@ -1923,11 +1978,12 @@ async function handleRobotSettings(req, res) {
       document.querySelectorAll('#outputMappingsContainer .output-mapping-row').forEach(function(rowEl) {
         var inputs = rowEl.querySelectorAll('input');
         var slotLabel = rowEl.querySelector('.output-slot-label');
-        if (inputs.length >= 2 && inputs[0].value.trim()) {
+        if (inputs.length >= 3 && inputs[0].value.trim()) {
           var slotNum = slotLabel ? slotLabel.textContent.trim().replace('Output ', '') : '1';
           outputMappings.push({
             path: inputs[0].value,
             label: inputs[1].value,
+            fallback: inputs[2].value,
             output: 'output_' + slotNum
           });
         }
@@ -2102,8 +2158,10 @@ async function handleRobotSettings(req, res) {
           // Response body
           var bodyEl = document.getElementById('testResponseBody');
           if (data.responseBodyParsed) {
-            bodyEl.textContent = JSON.stringify(data.responseBodyParsed, null, 2);
+            lastTestResponseParsed = data.responseBodyParsed;
+            bodyEl.innerHTML = renderInteractiveJson(data.responseBodyParsed);
           } else {
+            lastTestResponseParsed = null;
             bodyEl.textContent = data.responseBody || '(empty)';
           }
 
@@ -2114,18 +2172,28 @@ async function handleRobotSettings(req, res) {
             outputSection.style.display = 'block';
             outputBody.innerHTML = data.outputMappings.map(function(m) {
               var slotNum = m.output.replace('output_', '');
-              var valueDisplay = m.value !== null && m.value !== undefined
-                ? '<code>' + escapeHtml(String(m.value)) + '</code>'
-                : '<span style="color:var(--color-text-muted);font-style:italic;">not found</span>';
+              var valueDisplay;
+              if (m.usedFallback) {
+                valueDisplay = '<span style="color:#ea580c;">' + escapeHtml(String(m.value)) + ' <em>(fallback)</em></span>';
+              } else if (m.value !== null && m.value !== undefined) {
+                valueDisplay = '<code>' + escapeHtml(String(m.value)) + '</code>';
+              } else {
+                valueDisplay = '<span style="color:var(--color-text-muted);font-style:italic;">not found</span>';
+              }
               return '<tr><td>Output ' + slotNum + '</td><td><code>' + escapeHtml(m.path) + '</code></td><td>' + valueDisplay + '</td></tr>';
             }).join('');
           } else {
             outputSection.style.display = 'none';
           }
 
+          // Update inline previews
+          updateMappingPreviews();
+
           errorPanel.style.display = 'none';
         } else {
           // Error response
+          lastTestResponseParsed = null;
+          clearMappingPreviews();
           document.getElementById('testStatusBadge').textContent = 'Error';
           document.getElementById('testStatusBadge').className = 'status-badge status-5xx';
           document.getElementById('testExecTime').textContent = data.executionTime ? data.executionTime + 'ms' : '';
@@ -2141,6 +2209,8 @@ async function handleRobotSettings(req, res) {
         }
       })
       .catch(function(err) {
+        lastTestResponseParsed = null;
+        clearMappingPreviews();
         resultsPanel.style.display = 'block';
         errorPanel.style.display = 'block';
         errorPanel.textContent = 'Network error: ' + err.message;
@@ -2161,6 +2231,130 @@ async function handleRobotSettings(req, res) {
       var div = document.createElement('div');
       div.appendChild(document.createTextNode(str));
       return div.innerHTML;
+    }
+
+    // --- Interactive JSON rendering ---
+
+    function renderInteractiveJson(obj) {
+      return '<div class="json-interactive">' + renderJsonNode(obj, '', 0) + '</div>';
+    }
+
+    function renderJsonNode(value, path, indent) {
+      var pad = '  '.repeat(indent);
+      var pad1 = '  '.repeat(indent + 1);
+
+      if (value === null) {
+        return '<span class="json-clickable json-null" data-path="' + escapeAttr(path) + '" onclick="onJsonValueClick(this)">null</span>';
+      }
+
+      if (typeof value === 'boolean') {
+        return '<span class="json-clickable json-bool" data-path="' + escapeAttr(path) + '" onclick="onJsonValueClick(this)">' + String(value) + '</span>';
+      }
+
+      if (typeof value === 'number') {
+        return '<span class="json-clickable json-number" data-path="' + escapeAttr(path) + '" onclick="onJsonValueClick(this)">' + String(value) + '</span>';
+      }
+
+      if (typeof value === 'string') {
+        return '<span class="json-clickable json-string" data-path="' + escapeAttr(path) + '" onclick="onJsonValueClick(this)">"' + escapeHtml(value) + '"</span>';
+      }
+
+      if (Array.isArray(value)) {
+        if (value.length === 0) return '<span class="json-bracket">[]</span>';
+        var items = value.map(function(item, i) {
+          var childPath = path ? path + '[' + i + ']' : '[' + i + ']';
+          return pad1 + renderJsonNode(item, childPath, indent + 1) + (i < value.length - 1 ? ',' : '');
+        });
+        return '<span class="json-bracket">[</span>\\n' + items.join('\\n') + '\\n' + pad + '<span class="json-bracket">]</span>';
+      }
+
+      if (typeof value === 'object') {
+        var keys = Object.keys(value);
+        if (keys.length === 0) return '<span class="json-bracket">{}</span>';
+        var entries = keys.map(function(key, i) {
+          var childPath = path ? path + '.' + key : key;
+          return pad1 + '<span class="json-key">"' + escapeHtml(key) + '"</span>: ' + renderJsonNode(value[key], childPath, indent + 1) + (i < keys.length - 1 ? ',' : '');
+        });
+        return '<span class="json-bracket">{</span>\\n' + entries.join('\\n') + '\\n' + pad + '<span class="json-bracket">}</span>';
+      }
+
+      return escapeHtml(String(value));
+    }
+
+    function onJsonValueClick(spanEl) {
+      var path = spanEl.getAttribute('data-path');
+      if (!path) return;
+
+      // Check if path already exists in mapping rows
+      var existing = outputMappingRows.find(function(r) { return r.path === path; });
+      if (existing) {
+        // Flash the existing span to indicate duplicate
+        spanEl.classList.remove('json-clickable-added');
+        void spanEl.offsetWidth; // trigger reflow
+        spanEl.classList.add('json-clickable-added');
+        return;
+      }
+
+      // Check max slots
+      if (outputMappingRows.length >= MAX_OUTPUT_MAPPINGS) return;
+
+      addOutputMappingRow(path);
+      flushSave();
+      updateMappingPreviews();
+
+      // Flash feedback
+      spanEl.classList.add('json-clickable-added');
+    }
+
+    // --- Inline value preview ---
+
+    var lastTestResponseParsed = null;
+
+    function extractJsonPathClient(obj, path) {
+      if (!obj || !path) return undefined;
+      var parts = path.replace(/\\[(\\d+)\\]/g, '.$1').split('.');
+      var current = obj;
+      for (var i = 0; i < parts.length; i++) {
+        if (current === null || current === undefined) return undefined;
+        current = current[parts[i]];
+      }
+      return current;
+    }
+
+    function updateMappingPreviews() {
+      // Remove old previews
+      document.querySelectorAll('.mapping-preview').forEach(function(el) { el.remove(); });
+
+      if (!lastTestResponseParsed) return;
+
+      document.querySelectorAll('#outputMappingsContainer .output-mapping-row').forEach(function(rowEl) {
+        var inputs = rowEl.querySelectorAll('input');
+        if (inputs.length < 3) return;
+        var path = inputs[0].value.trim();
+        var fallback = inputs[2].value;
+
+        if (!path) return;
+
+        var value = extractJsonPathClient(lastTestResponseParsed, path);
+        var previewEl = document.createElement('div');
+        previewEl.className = 'mapping-preview';
+
+        if (value !== undefined) {
+          var display = typeof value === 'object' ? JSON.stringify(value) : String(value);
+          if (display.length > 80) display = display.substring(0, 80) + '...';
+          previewEl.innerHTML = '<span class="preview-value">' + escapeHtml(display) + '</span>';
+        } else if (fallback) {
+          previewEl.innerHTML = '<span class="preview-fallback">not found, fallback: ' + escapeHtml(fallback) + '</span>';
+        } else {
+          previewEl.innerHTML = '<span class="preview-not-found">not found</span>';
+        }
+
+        rowEl.insertAdjacentElement('afterend', previewEl);
+      });
+    }
+
+    function clearMappingPreviews() {
+      document.querySelectorAll('.mapping-preview').forEach(function(el) { el.remove(); });
     }
   </script>
 </body>

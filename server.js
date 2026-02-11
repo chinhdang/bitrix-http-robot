@@ -70,14 +70,26 @@ app.post('/bitrix-handler/test', async (req, res) => {
         if (mapping.path && mapping.output) {
           try {
             const value = extractJsonPath(responseBodyParsed, mapping.path);
+            const usedFallback = value === undefined && !!mapping.fallback;
             outputMappings.push({
               output: mapping.output,
               path: mapping.path,
-              value: value !== undefined ? (typeof value === 'object' ? JSON.stringify(value) : String(value)) : null,
+              value: value !== undefined
+                ? (typeof value === 'object' ? JSON.stringify(value) : String(value))
+                : (mapping.fallback || null),
+              fallback: mapping.fallback || '',
+              usedFallback: usedFallback,
               label: mapping.label || ''
             });
           } catch (e) {
-            outputMappings.push({ output: mapping.output, path: mapping.path, value: null, label: mapping.label || '' });
+            outputMappings.push({
+              output: mapping.output,
+              path: mapping.path,
+              value: mapping.fallback || null,
+              fallback: mapping.fallback || '',
+              usedFallback: !!mapping.fallback,
+              label: mapping.label || ''
+            });
           }
         }
       });
