@@ -11,7 +11,7 @@
     "test:services": "node --test tests/services/*.test.js",
     "test:routes": "node --test tests/routes/*.test.js",
     "migrate": "node db/migrate.js",
-    "build:admin": "cd admin-ui && npm install && npm run build",
+    "build": "cd admin-ui && npm install && npm run build",
     "oauth": "node oauth-helper.js"
   },
   "keywords": [
