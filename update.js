@@ -1,6 +1,8 @@
 const axios = require('axios');
 require('dotenv').config();
 
+const { robotConfig } = require('./install');
+
 const DOMAIN = process.env.BITRIX24_DOMAIN;
 const ACCESS_TOKEN = process.env.BITRIX24_ACCESS_TOKEN;
 const HANDLER_URL = process.env.HANDLER_URL;
@@ -23,14 +25,18 @@ async function updateRobot() {
 
     const data = {
       CODE: CODE,
-      HANDLER: `${HANDLER_URL}/bitrix-handler/execute`,
-      AUTH_USER_ID: parseInt(USER_ID),
-      USE_SUBSCRIPTION: 'Y',
-      USE_PLACEMENT: 'Y',
-      PLACEMENT_HANDLER: `${HANDLER_URL}/placement/robot-settings`
+      FIELDS: {
+        HANDLER: `${HANDLER_URL}/bitrix-handler/execute`,
+        AUTH_USER_ID: parseInt(USER_ID),
+        USE_SUBSCRIPTION: 'Y',
+        USE_PLACEMENT: 'Y',
+        PLACEMENT_HANDLER: `${HANDLER_URL}/placement/robot-settings`,
+        RETURN_PROPERTIES: robotConfig.RETURN_PROPERTIES
+      }
     };
 
     console.log('Updating robot for Automation Rules...');
+    console.log('RETURN_PROPERTIES:', Object.keys(robotConfig.RETURN_PROPERTIES).join(', '));
     const response = await axios.post(url, data);
 
     if (response.data.error) {
@@ -51,11 +57,14 @@ async function updateActivity() {
 
     const data = {
       CODE: CODE,
-      HANDLER: `${HANDLER_URL}/bitrix-handler/execute`,
-      AUTH_USER_ID: parseInt(USER_ID),
-      USE_SUBSCRIPTION: 'Y',
-      USE_PLACEMENT: 'Y',
-      PLACEMENT_HANDLER: `${HANDLER_URL}/placement/robot-settings`
+      FIELDS: {
+        HANDLER: `${HANDLER_URL}/bitrix-handler/execute`,
+        AUTH_USER_ID: parseInt(USER_ID),
+        USE_SUBSCRIPTION: 'Y',
+        USE_PLACEMENT: 'Y',
+        PLACEMENT_HANDLER: `${HANDLER_URL}/placement/robot-settings`,
+        RETURN_PROPERTIES: robotConfig.RETURN_PROPERTIES
+      }
     };
 
     console.log('\nUpdating activity for Workflow Designer...');

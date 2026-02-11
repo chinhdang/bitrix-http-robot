@@ -229,5 +229,9 @@ async function install() {
   }
 }
 
-// Run installation
-install();
+// Run installation if called directly
+if (require.main === module) {
+  install();
+}
+
+module.exports = { robotConfig };
