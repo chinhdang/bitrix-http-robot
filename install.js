@@ -76,7 +76,12 @@ const robotConfig = {
         'ru': 'Сообщение об ошибке, если запрос не выполнен'
       },
       Type: 'string'
-    }
+    },
+    output_1: { Name: { en: 'Output 1' }, Type: 'text' },
+    output_2: { Name: { en: 'Output 2' }, Type: 'text' },
+    output_3: { Name: { en: 'Output 3' }, Type: 'text' },
+    output_4: { Name: { en: 'Output 4' }, Type: 'text' },
+    output_5: { Name: { en: 'Output 5' }, Type: 'text' }
   }
 };
 

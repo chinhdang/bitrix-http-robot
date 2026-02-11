@@ -4,6 +4,20 @@ const { validateProperties } = require('../utils/validation');
 const logger = require('../utils/logger');
 
 /**
+ * Extract a value from an object using dot-notation path
+ * Supports: "data.order_id", "data.items[0].name", "status"
+ */
+function extractJsonPath(obj, path) {
+  const parts = path.replace(/\[(\d+)\]/g, '.$1').split('.');
+  let current = obj;
+  for (const part of parts) {
+    if (current === null || current === undefined) return undefined;
+    current = current[part];
+  }
+  return current;
+}
+
+/**
  * Main handler for HTTP Request Robot/Activity execution
  * This is called by Bitrix24 when the robot/activity runs in a workflow
  *
@@ -167,6 +181,29 @@ async function executeHttpRequest(req, res) {
       responseHeaders: JSON.stringify(response.headers || {}),
       error: ''
     };
+
+    // Extract output mappings from response
+    if (config.outputMappings && Array.isArray(config.outputMappings)) {
+      const responseData = typeof response.data === 'object'
+        ? response.data
+        : (() => { try { return JSON.parse(response.data); } catch (e) { return null; } })();
+
+      if (responseData) {
+        config.outputMappings.forEach(mapping => {
+          if (mapping.path && mapping.output) {
+            try {
+              const value = extractJsonPath(responseData, mapping.path);
+              returnValues[mapping.output] = value !== undefined
+                ? (typeof value === 'object' ? JSON.stringify(value) : String(value))
+                : '';
+            } catch (e) {
+              logger.warn('Failed to extract output mapping', { path: mapping.path, error: e.message });
+              returnValues[mapping.output] = '';
+            }
+          }
+        });
+      }
+    }
 
     // Send result back to Bitrix24
     await sendBizprocEvent({

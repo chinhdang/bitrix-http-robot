@@ -775,6 +775,30 @@ async function handleRobotSettings(req, res) {
       color: var(--color-text-muted);
       font-size: 14px;
     }
+
+    /* Output Mapping Rows */
+    .output-mapping-row {
+      display: grid;
+      grid-template-columns: auto 1fr 1fr 38px;
+      gap: 8px;
+      margin-bottom: 8px;
+      align-items: start;
+    }
+
+    .output-mapping-row input {
+      margin-bottom: 0;
+    }
+
+    .output-slot-label {
+      display: flex;
+      align-items: center;
+      height: 40px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-primary);
+      white-space: nowrap;
+      padding: 0 4px;
+    }
   </style>
 </head>
 <body>
@@ -789,6 +813,7 @@ async function handleRobotSettings(req, res) {
         <button type="button" class="tab" onclick="switchTab('headers')" role="tab" aria-selected="false" aria-controls="tab-headers" id="tab-btn-headers">Headers</button>
         <button type="button" class="tab" onclick="switchTab('body')" role="tab" aria-selected="false" aria-controls="tab-body" id="tab-btn-body">Body</button>
         <button type="button" class="tab" onclick="switchTab('auth')" role="tab" aria-selected="false" aria-controls="tab-auth" id="tab-btn-auth">Authorization</button>
+        <button type="button" class="tab" onclick="switchTab('response')" role="tab" aria-selected="false" aria-controls="tab-response" id="tab-btn-response">Response</button>
       </div>
 
       <!-- Request Tab -->
@@ -948,6 +973,26 @@ async function handleRobotSettings(req, res) {
         </div>
       </div>
 
+      <!-- Response Tab -->
+      <div id="tab-response" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-response">
+        <div class="form-data-section">
+          <div class="form-data-header">
+            <h3>Output Mapping</h3>
+            <button type="button" class="btn btn-primary" onclick="addOutputMappingRow()" id="addOutputMappingBtn">+ Add Mapping</button>
+          </div>
+          <div class="help-text" style="margin-bottom: 14px; margin-top: -10px;">
+            Extract values from JSON response using dot notation (e.g. <code>data.order_id</code>, <code>items[0].name</code>).
+            Mapped values are available as <strong>Output 1–5</strong> in subsequent workflow steps.
+          </div>
+
+          <div id="outputMappingsContainer">
+            <div class="empty-state">
+              Click "+ Add Mapping" to extract values from the JSON response
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="actions">
         <span class="help-text" style="flex: 1; align-self: center;">Configuration is auto-saved. Click Bitrix's "SAVE" button to finish.</span>
         <button type="button" class="btn btn-secondary" onclick="BX24.closeApplication()" aria-label="Cancel and close">
@@ -975,10 +1020,12 @@ async function handleRobotSettings(req, res) {
   <script>
     let formDataRows = [];
     let headerRows = [];
+    let outputMappingRows = [];
     let placementData = null;
     let availableVariables = [];
     let currentBodyType = 'none';
     let currentAuthType = 'none';
+    const MAX_OUTPUT_MAPPINGS = 5;
 
     // Tab switching with ARIA support
     function switchTab(tabName) {
@@ -1112,6 +1159,83 @@ async function handleRobotSettings(req, res) {
       }
 
       flushSave();
+    }
+
+    // --- Output Mapping functions ---
+
+    function getNextOutputSlot() {
+      var usedSlots = outputMappingRows.map(function(r) { return r.output; });
+      for (var i = 1; i <= MAX_OUTPUT_MAPPINGS; i++) {
+        if (usedSlots.indexOf('output_' + i) === -1) return 'output_' + i;
+      }
+      return null;
+    }
+
+    function addOutputMappingRow(path, label, output) {
+      if (!output) {
+        output = getNextOutputSlot();
+      }
+      if (!output) return; // all 5 slots used
+
+      path = path || '';
+      label = label || '';
+
+      var container = document.getElementById('outputMappingsContainer');
+
+      // Remove empty state
+      if (outputMappingRows.length === 0) {
+        container.innerHTML = '';
+      }
+
+      var rowId = 'omap_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+      var slotNum = output.replace('output_', '');
+
+      outputMappingRows.push({ id: rowId, path: path, label: label, output: output });
+
+      var rowHtml =
+        '<div class="output-mapping-row" id="' + rowId + '">' +
+          '<span class="output-slot-label">Output ' + slotNum + '</span>' +
+          '<input type="text" placeholder="JSON path (e.g. data.order_id)" value="' + escapeAttr(path) + '" ' +
+            'oninput="updateOutputMapping(\\'' + rowId + '\\', \\'path\\', this.value); saveToPlacement();" ' +
+            'onchange="updateOutputMapping(\\'' + rowId + '\\', \\'path\\', this.value); flushSave();">' +
+          '<input type="text" placeholder="Label (memo)" value="' + escapeAttr(label) + '" ' +
+            'oninput="updateOutputMapping(\\'' + rowId + '\\', \\'label\\', this.value); saveToPlacement();" ' +
+            'onchange="updateOutputMapping(\\'' + rowId + '\\', \\'label\\', this.value); flushSave();">' +
+          '<button type="button" class="btn btn-danger" onclick="removeOutputMappingRow(\\'' + rowId + '\\')" title="Remove">×</button>' +
+        '</div>';
+
+      container.insertAdjacentHTML('beforeend', rowHtml);
+      updateAddMappingButton();
+    }
+
+    function escapeAttr(str) {
+      return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function updateOutputMapping(rowId, field, value) {
+      var row = outputMappingRows.find(function(r) { return r.id === rowId; });
+      if (row) row[field] = value;
+    }
+
+    function removeOutputMappingRow(rowId) {
+      var el = document.getElementById(rowId);
+      if (el) el.remove();
+      outputMappingRows = outputMappingRows.filter(function(r) { return r.id !== rowId; });
+
+      if (outputMappingRows.length === 0) {
+        document.getElementById('outputMappingsContainer').innerHTML =
+          '<div class="empty-state">Click "+ Add Mapping" to extract values from the JSON response</div>';
+      }
+
+      updateAddMappingButton();
+      flushSave();
+    }
+
+    function updateAddMappingButton() {
+      var btn = document.getElementById('addOutputMappingBtn');
+      if (btn) {
+        btn.disabled = outputMappingRows.length >= MAX_OUTPUT_MAPPINGS;
+      }
     }
 
     // Keyboard shortcuts handler
@@ -1312,6 +1436,13 @@ async function handleRobotSettings(req, res) {
           } else if (config.bodyType === 'raw') {
             document.getElementById('rawBody').value = config.rawBody || '';
           }
+        }
+
+        // Load output mappings
+        if (config.outputMappings && Array.isArray(config.outputMappings)) {
+          config.outputMappings.forEach(function(mapping) {
+            addOutputMappingRow(mapping.path || '', mapping.label || '', mapping.output || '');
+          });
         }
 
         // Load auth
@@ -1603,6 +1734,21 @@ async function handleRobotSettings(req, res) {
         });
       }
 
+      // Read output mappings directly from DOM
+      var outputMappings = [];
+      document.querySelectorAll('#outputMappingsContainer .output-mapping-row').forEach(function(rowEl) {
+        var inputs = rowEl.querySelectorAll('input');
+        var slotLabel = rowEl.querySelector('.output-slot-label');
+        if (inputs.length >= 2 && inputs[0].value.trim()) {
+          var slotNum = slotLabel ? slotLabel.textContent.trim().replace('Output ', '') : '1';
+          outputMappings.push({
+            path: inputs[0].value,
+            label: inputs[1].value,
+            output: 'output_' + slotNum
+          });
+        }
+      });
+
       return {
         url: document.getElementById('url').value,
         method: document.getElementById('method').value,
@@ -1617,7 +1763,8 @@ async function handleRobotSettings(req, res) {
         basicPassword: currentAuthType === 'basic' ? document.getElementById('basicPassword').value : '',
         apiKeyName: currentAuthType === 'api-key' ? document.getElementById('apiKeyName').value : '',
         apiKeyValue: currentAuthType === 'api-key' ? document.getElementById('apiKeyValue').value : '',
-        apiKeyLocation: currentAuthType === 'api-key' ? document.getElementById('apiKeyLocation').value : 'header'
+        apiKeyLocation: currentAuthType === 'api-key' ? document.getElementById('apiKeyLocation').value : 'header',
+        outputMappings: outputMappings
       };
     }
 
