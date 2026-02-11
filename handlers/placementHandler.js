@@ -1145,55 +1145,7 @@ async function handleRobotSettings(req, res) {
       placementData = BX24.placement.info();
       console.log('Placement data:', placementData);
 
-      // CRITICAL: Listen for parent form save event
-      console.log('Binding onSave event listener...');
-      BX24.placement.bindEvent('onSave', function() {
-        console.log('onSave event fired! Parent form is saving...');
-
-        // Collect current configuration
-        const config = getCurrentConfig();
-        const configString = JSON.stringify(config);
-
-        console.log('Providing values to parent on save:', {
-          config: configString.substring(0, 100) + '...',
-          url: config.url,
-          method: config.method,
-          timeout: config.timeout
-        });
-
-        // Provide values when parent form saves
-        try {
-          BX24.placement.call('setPropertyValue', {
-            property: 'config',
-            value: configString
-          });
-
-          BX24.placement.call('setPropertyValue', {
-            property: 'url',
-            value: config.url
-          });
-
-          BX24.placement.call('setPropertyValue', {
-            property: 'method',
-            value: config.method
-          });
-
-          BX24.placement.call('setPropertyValue', {
-            property: 'timeout',
-            value: config.timeout
-          });
-
-          console.log('Values provided to parent successfully');
-
-          // Return true to allow save to continue
-          return true;
-        } catch (error) {
-          console.error('Error providing values:', error);
-          return false;
-        }
-      });
-
-      console.log('onSave event listener bound successfully');
+      // No event binding needed - setPropertyValue will be called on form submit
 
       // Check available commands
       BX24.placement.getInterface(function(result) {
@@ -1601,11 +1553,31 @@ async function handleRobotSettings(req, res) {
         return;
       }
 
-      console.log('Form validated. Configuration is ready.');
-      console.log('Current config:', getCurrentConfig());
+      console.log('Form validated. Setting property values...');
 
-      // Show info message
-      alert('Configuration is ready!\n\nNow click the green "LƯU" (Save) button at the bottom to save the robot.\n\nThe values will be saved automatically when you click LƯU.');
+      // Get current configuration
+      const config = getCurrentConfig();
+      const configString = JSON.stringify(config);
+
+      console.log('Current config:', config);
+
+      // Call setPropertyValue with ALL properties at once (correct pattern from docs)
+      const propertyValues = {
+        config: configString,
+        url: config.url,
+        method: config.method,
+        timeout: config.timeout
+      };
+
+      console.log('Calling BX24.placement.call("setPropertyValue", ...)', propertyValues);
+
+      BX24.placement.call('setPropertyValue', propertyValues);
+
+      console.log('Property values set successfully!');
+      console.log('Now click the green "LƯU" button to save the robot.');
+
+      // Show success message
+      alert('Configuration updated!\n\nNow click the green "LƯU" (Save) button at the bottom to save the robot.');
     });
   </script>
 </body>
