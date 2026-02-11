@@ -779,7 +779,7 @@ async function handleRobotSettings(req, res) {
     /* Output Mapping Rows */
     .output-mapping-row {
       display: grid;
-      grid-template-columns: auto 1fr 1fr 1fr 38px;
+      grid-template-columns: auto 1fr 1fr 38px;
       gap: 8px;
       margin-bottom: 8px;
       align-items: start;
@@ -1171,25 +1171,8 @@ async function handleRobotSettings(req, res) {
 
       <!-- Response Tab -->
       <div id="tab-response" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-response">
+        <!-- Test Request Section (top) -->
         <div class="form-data-section">
-          <div class="form-data-header">
-            <h3>Output Mapping</h3>
-            <button type="button" class="btn btn-primary" onclick="addOutputMappingRow()" id="addOutputMappingBtn">+ Add Mapping</button>
-          </div>
-          <div class="help-text" style="margin-bottom: 14px; margin-top: -10px;">
-            Extract values from JSON response using dot notation (e.g. <code>data.order_id</code>, <code>items[0].name</code>).
-            Mapped values are available as <strong>Output 1–5</strong> in subsequent workflow steps.
-          </div>
-
-          <div id="outputMappingsContainer">
-            <div class="empty-state">
-              Click "+ Add Mapping" to extract values from the JSON response
-            </div>
-          </div>
-        </div>
-
-        <!-- Test Request Section -->
-        <div class="form-data-section" style="margin-top: 20px;">
           <div class="form-data-header">
             <h3>Test Request</h3>
             <button type="button" class="btn btn-test" onclick="sendTestRequest()" id="testRequestBtn">
@@ -1197,7 +1180,7 @@ async function handleRobotSettings(req, res) {
             </button>
           </div>
           <div class="help-text" style="margin-top: -10px; margin-bottom: 14px;">
-            Send a test request to preview the response and verify output mappings.
+            Send a test request, then click on values in the JSON response to create output mappings.
           </div>
 
           <div id="testVariableWarning" class="test-warning" style="display:none;">
@@ -1211,7 +1194,7 @@ async function handleRobotSettings(req, res) {
             </div>
 
             <div class="test-results-section">
-              <h4>Response Body</h4>
+              <h4>Response Body <span class="help-text">(click a value to add mapping)</span></h4>
               <pre class="response-body-pre" id="testResponseBody"></pre>
             </div>
 
@@ -1224,6 +1207,23 @@ async function handleRobotSettings(req, res) {
             </div>
 
             <div id="testErrorPanel" style="display:none;" class="test-error"></div>
+          </div>
+        </div>
+
+        <!-- Output Mapping Section (bottom) -->
+        <div class="form-data-section" style="margin-top: 20px;">
+          <div class="form-data-header">
+            <h3>Output Mapping</h3>
+            <button type="button" class="btn btn-primary" onclick="addOutputMappingRow()" id="addOutputMappingBtn">+ Add Mapping</button>
+          </div>
+          <div class="help-text" style="margin-bottom: 14px; margin-top: -10px;">
+            Mapped values are available as <strong>Output 1–5</strong> in subsequent workflow steps.
+          </div>
+
+          <div id="outputMappingsContainer">
+            <div class="empty-state">
+              Send a test request above, then click on JSON values to add mappings — or click "+ Add Mapping" to add manually.
+            </div>
           </div>
         </div>
       </div>
@@ -1406,14 +1406,13 @@ async function handleRobotSettings(req, res) {
       return null;
     }
 
-    function addOutputMappingRow(path, label, output, fallback) {
+    function addOutputMappingRow(path, output, fallback) {
       if (!output) {
         output = getNextOutputSlot();
       }
       if (!output) return; // all 5 slots used
 
       path = path || '';
-      label = label || '';
       fallback = fallback || '';
 
       var container = document.getElementById('outputMappingsContainer');
@@ -1426,7 +1425,7 @@ async function handleRobotSettings(req, res) {
       var rowId = 'omap_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
       var slotNum = output.replace('output_', '');
 
-      outputMappingRows.push({ id: rowId, path: path, label: label, output: output, fallback: fallback });
+      outputMappingRows.push({ id: rowId, path: path, output: output, fallback: fallback });
 
       var rowHtml =
         '<div class="output-mapping-row" id="' + rowId + '">' +
@@ -1434,9 +1433,6 @@ async function handleRobotSettings(req, res) {
           '<input type="text" placeholder="JSON path (e.g. data.order_id)" value="' + escapeAttr(path) + '" ' +
             'oninput="updateOutputMapping(\\'' + rowId + '\\', \\'path\\', this.value); saveToPlacement(); updateMappingPreviews();" ' +
             'onchange="updateOutputMapping(\\'' + rowId + '\\', \\'path\\', this.value); flushSave();">' +
-          '<input type="text" placeholder="Label (memo)" value="' + escapeAttr(label) + '" ' +
-            'oninput="updateOutputMapping(\\'' + rowId + '\\', \\'label\\', this.value); saveToPlacement();" ' +
-            'onchange="updateOutputMapping(\\'' + rowId + '\\', \\'label\\', this.value); flushSave();">' +
           '<input type="text" placeholder="Fallback" value="' + escapeAttr(fallback) + '" ' +
             'oninput="updateOutputMapping(\\'' + rowId + '\\', \\'fallback\\', this.value); saveToPlacement(); updateMappingPreviews();" ' +
             'onchange="updateOutputMapping(\\'' + rowId + '\\', \\'fallback\\', this.value); flushSave();">' +
@@ -1457,16 +1453,22 @@ async function handleRobotSettings(req, res) {
     }
 
     function removeOutputMappingRow(rowId) {
+      // Also remove the preview element right after the row
       var el = document.getElementById(rowId);
-      if (el) el.remove();
+      if (el) {
+        var next = el.nextElementSibling;
+        if (next && next.classList.contains('mapping-preview')) next.remove();
+        el.remove();
+      }
       outputMappingRows = outputMappingRows.filter(function(r) { return r.id !== rowId; });
 
       if (outputMappingRows.length === 0) {
         document.getElementById('outputMappingsContainer').innerHTML =
-          '<div class="empty-state">Click "+ Add Mapping" to extract values from the JSON response</div>';
+          '<div class="empty-state">Send a test request above, then click on JSON values to add mappings — or click "+ Add Mapping" to add manually.</div>';
       }
 
       updateAddMappingButton();
+      updateMappingPreviews();
       flushSave();
     }
 
@@ -1680,7 +1682,7 @@ async function handleRobotSettings(req, res) {
         // Load output mappings
         if (config.outputMappings && Array.isArray(config.outputMappings)) {
           config.outputMappings.forEach(function(mapping) {
-            addOutputMappingRow(mapping.path || '', mapping.label || '', mapping.output || '', mapping.fallback || '');
+            addOutputMappingRow(mapping.path || '', mapping.output || '', mapping.fallback || '');
           });
         }
 
@@ -1978,12 +1980,11 @@ async function handleRobotSettings(req, res) {
       document.querySelectorAll('#outputMappingsContainer .output-mapping-row').forEach(function(rowEl) {
         var inputs = rowEl.querySelectorAll('input');
         var slotLabel = rowEl.querySelector('.output-slot-label');
-        if (inputs.length >= 3 && inputs[0].value.trim()) {
+        if (inputs.length >= 2 && inputs[0].value.trim()) {
           var slotNum = slotLabel ? slotLabel.textContent.trim().replace('Output ', '') : '1';
           outputMappings.push({
             path: inputs[0].value,
-            label: inputs[1].value,
-            fallback: inputs[2].value,
+            fallback: inputs[1].value,
             output: 'output_' + slotNum
           });
         }
@@ -2329,9 +2330,9 @@ async function handleRobotSettings(req, res) {
 
       document.querySelectorAll('#outputMappingsContainer .output-mapping-row').forEach(function(rowEl) {
         var inputs = rowEl.querySelectorAll('input');
-        if (inputs.length < 3) return;
+        if (inputs.length < 2) return;
         var path = inputs[0].value.trim();
-        var fallback = inputs[2].value;
+        var fallback = inputs[1].value;
 
         if (!path) return;
 
