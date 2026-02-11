@@ -451,10 +451,99 @@ function saveToPlacement() {
 - Khi load, set display cho TAT CA section (khong chi section can hien)
 - Khong dung truthy check cho cac gia tri co the la empty string
 
-### 7.3. Van de con lai
-- Robot execution: can kiem tra executeHandler co gui HTTP request dung config da luu khong
+### 7.3. Milestone: Save reliability fix (commit cc60edd)
+
+**Van de**: User thay doi gia tri, bam LUU nhung Bitrix giu gia tri cu.
+
+**2 nguyen nhan chinh:**
+
+1. **Race condition voi debounce 300ms**: User bam LUU cua Bitrix truoc khi debounce timeout ket thuc → `setPropertyValue` chua duoc goi → Bitrix luu gia tri cu.
+
+2. **Stale JS array**: `getCurrentConfig()` doc tu `formDataRows`/`headerRows` JS array thay vi truc tiep tu DOM. Khi user sua truc tiep trong input, array co the khong dong bo voi DOM.
+
+**Fix:**
+- Tach `saveToPlacement()` (debounced 150ms, cho oninput) va `flushSave()` (goi ngay, cho onchange/blur/structural changes)
+- `getCurrentConfig()` doc headers va formData truc tiep tu DOM bang `querySelectorAll` thay vi tu JS array
+- Them `lastSavedConfig` de skip duplicate saves
+- Them callback cho `setPropertyValue` de log ket qua
+
+### 7.4. Milestone: Bitrix variable resolution thanh cong (commit b12e236)
+
+**Van de**: Bien template nhu `{=Document:CRM_ID}` bi Bitrix auto-convert thanh display name `{{CRM item ID}}` trong `current_values`. Khi user mo lai settings va save bat ky thay doi, code gui `{{CRM item ID}}` (display name) nguoc lai → Bitrix coi la literal string → khong resolve khi robot chay.
+
+**Phat hien quan trong ve Bitrix variable system:**
+
+| Khia canh | Chi tiet |
+|-----------|---------|
+| Cu phap dung | `{=Document:FIELD_CODE}` (VD: `{=Document:CRM_ID}`) |
+| Display name | Bitrix auto-convert thanh `{{Display Name}}` trong current_values |
+| Resolve | Bitrix resolve `{=Document:CODE}` trong TEXT properties khi robot chay, KE CA khi nam trong JSON string |
+| document_fields | PLACEMENT_OPTIONS chua `document_fields` mapping FIELD_CODE → Display Name |
+
+**Fix - `convertConfigDisplayNames()`:**
+- Build reverse map tu `availableVariables`: display name → `{=Document:CODE}`
+- Truoc khi goi `setPropertyValue`, scan toan bo config va replace `{{Display Name}}` → `{=Document:CODE}`
+- Dam bao Bitrix luon nhan dung bizproc syntax de resolve
+
+```js
+// Reverse mapping
+function convertDisplayToTemplate(str) {
+    return str.replace(/\{\{([^}]+)\}\}/g, function(match, displayName) {
+        var variable = availableVariables.find(v => v.name === displayName.trim());
+        if (variable) return variable.template;
+        return match;
+    });
+}
+```
+
+**Ket qua thuc nghiem - Robot chay thanh cong:**
+```
+Cau hinh:               → Gia tri nhan duoc:
+{=Document:CRM_ID}      → "L_262"
+{=Document:OPPORTUNITY}  → "0.00"
+{=Document:STATUS_ID_PRINTABLE} → "Submitted Form"
+{=Document:TIME_CREATE}  → "23:48"
+```
+
+### 7.5. Variable Picker - Hien thi va su dung
+
+Variable picker (nut `⋯`) doc `document_fields` tu PLACEMENT_OPTIONS va hien thi tat ca truong kha dung.
+
+**Cac loai bien duoc ho tro:**
+| Loai | Template format | Vi du |
+|------|----------------|-------|
+| Document fields | `{=Document:FIELD_CODE}` | `{=Document:CRM_ID}`, `{=Document:TITLE}` |
+| Template variables | `{=Variable:ID}` | `{=Variable:var_123}` |
+| Template parameters | `{=Parameter:ID}` | `{=Parameter:param_1}` |
+| Global constants | `{=GlobalConst:ID}` | `{=GlobalConst:Constant1735836371481}` |
+| Global variables | `{=GlobalVar:ID}` | `{=GlobalVar:Variable_123}` |
+
+### 7.6. Full Data Flow (da xac nhan hoat dong)
+
+```
+1. User mo robot settings
+   → Bitrix POST den PLACEMENT_HANDLER voi PLACEMENT_OPTIONS
+   → Server parse current_values.config, inject window.__SAVED_CONFIG__
+   → Client load form, hien thi {{Display Name}} (tu Bitrix)
+
+2. User thay doi config (nhap tay hoac dung variable picker)
+   → oninput: saveToPlacement() (debounced 150ms)
+   → onchange/blur: flushSave() (ngay lap tuc)
+   → convertConfigDisplayNames() convert {{Name}} → {=Document:CODE}
+   → BX24.placement.call('setPropertyValue', {config: JSON.stringify(...)})
+
+3. User bam LUU cua Bitrix
+   → Bitrix doc gia tri tu setPropertyValue, luu vao robot config
+
+4. Robot chay (trigger boi automation rule)
+   → Bitrix resolve {=Document:CODE} → gia tri thuc
+   → POST den execute handler voi properties.config (JSON voi gia tri thuc)
+   → executeHandler parse config, thuc hien HTTP request
+   → Gui ket qua ve Bitrix qua bizproc.event.send
+```
 
 ---
 
 *Research compiled: 2026-02-11*
 *Sources: Bitrix24 Official REST API Docs, b24restdocs GitHub, Bitrix MCP*
+*Last updated: 2026-02-11 - Full pipeline verified working*
