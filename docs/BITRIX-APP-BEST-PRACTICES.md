@@ -215,7 +215,87 @@ For Vue apps: install `@bitrix24/b24ui`, use components like `<B24Input>`, `<B24
 
 Reference: See `B24UI-DESIGN-SYSTEM.md` in memory for full token/component details.
 
-## 10. Common Pitfalls
+## 10. Admin Page (App Management UI)
+
+### Architecture
+```
+Bitrix24 Left Menu → POST /admin → Express serves Vue SPA with injected auth
+Vue SPA → fetch /api/admin/* → Express API → PostgreSQL
+Robot Execute → quota check → HTTP request → log to DB (fire-and-forget)
+```
+
+### Admin Page Entry Point
+Bitrix24 POSTs to your app URL when user opens from left menu. The POST body contains:
+- `AUTH_ID`, `REFRESH_ID`, `member_id`, `PLACEMENT`, `PLACEMENT_OPTIONS`
+- **DOMAIN may be missing** — extract from `Referer` header or env var fallback
+
+```javascript
+app.post('/admin', async (req, res) => {
+  const { AUTH_ID, REFRESH_ID, member_id } = req.body;
+  // Domain fallback chain: POST body > Referer header > env var
+  let domain = req.body.DOMAIN || '';
+  if (!domain && req.headers.referer) {
+    domain = new URL(req.headers.referer).hostname;
+  }
+  if (!domain) domain = process.env.BITRIX24_DOMAIN || '';
+
+  // Read built SPA, inject auth context
+  let html = fs.readFileSync('admin-ui/dist/index.html', 'utf8');
+  const authScript = `<script>window.__B24_AUTH__=${JSON.stringify({
+    domain, authId: AUTH_ID, memberId: member_id
+  })};</script>`;
+  html = html.replace('</head>', authScript + '</head>');
+  res.type('html').send(html);
+});
+```
+
+### Auth Middleware for Admin API
+- SPA sends `X-Member-Id`, `X-Auth-Id`, `X-Domain` headers on every API call
+- Middleware verifies via `https://{domain}/rest/app.info?auth={authId}`
+- Cache verification 5 minutes per member_id
+
+### Quota Enforcement (Fail-Open)
+```javascript
+// In executeHandler — BEFORE making HTTP request
+const quota = await checkQuota(memberId, domain);
+if (!quota.allowed) {
+  await sendBizprocEvent({ event_token, return_values: { error: 'Quota exceeded' }, auth });
+  return;
+}
+// ... make request ...
+// After: fire-and-forget log
+logRequest({ accountId, url, method, statusCode, success, executionTime });
+```
+
+Key: DB errors never block robot execution (fail-open). Request logging is fire-and-forget.
+
+### Vue SPA in Bitrix24 Iframe
+- **Hash-mode routing** (`createWebHashHistory`) — required for iframe
+- **Vite base**: `/admin-assets/` — static assets served separately
+- **Auth**: `window.__B24_AUTH__` injected server-side, read by composable
+- **No BX24 SDK needed** — auth token passed directly from server
+
+### Railway Deployment Gotcha: Nixpacks COPY
+Nixpacks always runs `COPY . /app` as the LAST step, overwriting any files built during earlier build steps. **Solution: commit `admin-ui/dist/` to git** so it survives the final COPY.
+
+Do NOT use `buildCommand` in railway.json for this — it runs before COPY.
+
+### Database Setup
+- PostgreSQL on Railway: `railway add --database postgres`
+- Set `DATABASE_URL` on app service referencing internal Postgres URL
+- Migrations: `railway run npm run migrate`
+- Seed: `node db/seed.js` with public DATABASE_URL
+
+### Pricing / Quota Model
+```javascript
+const PLAN_LIMITS = {
+  free: 100, basic: 1000, pro: 10000, enterprise: Infinity
+};
+```
+Identify users by `member_id` (unique per Bitrix24 portal). Store domain for display.
+Owner/developer account: set to `enterprise` plan in DB.
+
+## 11. Common Pitfalls
 
 | Pitfall | Solution |
 |---------|----------|
@@ -225,3 +305,7 @@ Reference: See `B24UI-DESIGN-SYSTEM.md` in memory for full token/component detai
 | Output values empty in next rule | Use "After previous rule" mode, not "In parallel" |
 | Test mode shows raw variables | Expected — variables resolve only in real workflow |
 | OAuth token expired in CLI | Auto-refresh: check expiry, call oauth.bitrix.info/oauth/token |
+| Admin POST missing DOMAIN | Extract from Referer header, then env var fallback |
+| Nixpacks overwrites build output | Commit dist/ to git — COPY runs after build steps |
+| Admin API 401 in iframe | Inject auth via `window.__B24_AUTH__` server-side, send as X-headers |
+| DB down during robot execution | Fail-open: catch errors, allow request, log warning |
