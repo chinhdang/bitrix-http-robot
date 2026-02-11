@@ -1,65 +1,66 @@
-# Deep Research: Bitrix24 Robot Placement - Data Save/Load Mechanism
+# Deep Research: Bitrix24 Robot Placement - Cơ chế Save/Load dữ liệu
 
-## Table of Contents
-1. [Tong quan van de](#1-tong-quan-van-de)
-2. [Co che luu du lieu tu Custom UI vao Bitrix](#2-co-che-luu-du-lieu-tu-custom-ui-vao-bitrix)
-3. [Co che Bitrix lay du lieu khi mo lai robot](#3-co-che-bitrix-lay-du-lieu-khi-mo-lai-robot)
+## Mục lục
+1. [Tổng quan vấn đề](#1-tổng-quan-vấn-đề)
+2. [Cơ chế lưu dữ liệu từ Custom UI vào Bitrix](#2-cơ-chế-lưu-dữ-liệu-từ-custom-ui-vào-bitrix)
+3. [Cơ chế Bitrix lấy dữ liệu khi mở lại robot](#3-cơ-chế-bitrix-lấy-dữ-liệu-khi-mở-lại-robot)
 4. [Official Code Example (Full)](#4-official-code-example-full)
-5. [Phan tich code hien tai va loi](#5-phan-tich-code-hien-tai-va-loi)
-6. [De xuat giai phap](#6-de-xuat-giai-phap)
+5. [Phân tích code hiện tại và lỗi](#5-phân-tích-code-hiện-tại-và-lỗi)
+6. [Đề xuất giải pháp](#6-đề-xuất-giải-pháp)
+7. [Kết quả thực nghiệm](#7-kết-quả-thực-nghiệm)
 
 ---
 
-## 1. Tong quan van de
+## 1. Tổng quan vấn đề
 
-Project `bitrix-http-robot` dang gap van de: **du lieu tu custom UI khong duoc luu/load dung cach** khi nguoi dung cau hinh robot trong Bitrix24 Automation Rules.
+Project `bitrix-http-robot` đang gặp vấn đề: **dữ liệu từ custom UI không được lưu/load đúng cách** khi người dùng cấu hình robot trong Bitrix24 Automation Rules.
 
-Lich su git cho thay da thu nhieu cach:
+Lịch sử git cho thấy đã thử nhiều cách:
 - `saveSettings`, `finish`, `setPropertyValue`, `bindEvent('onSave')`, hidden form inputs
-- Tat ca deu khong giai quyet triet de
+- Tất cả đều không giải quyết triệt để
 
 ---
 
-## 2. Co che luu du lieu tu Custom UI vao Bitrix
+## 2. Cơ chế lưu dữ liệu từ Custom UI vào Bitrix
 
-### 2.1. Dang ky Robot voi Custom Placement
+### 2.1. Đăng ký Robot với Custom Placement
 
-Khi dang ky robot qua `bizproc.robot.add`, can 2 tham so quan trong:
+Khi đăng ký robot qua `bizproc.robot.add`, cần 2 tham số quan trọng:
 
 ```js
 {
-  USE_PLACEMENT: 'Y',           // Bat custom UI
-  PLACEMENT_HANDLER: 'https://your-app.com/placement-handler',  // URL cua custom UI
-  PROPERTIES: {                 // Dinh nghia cac property
+  USE_PLACEMENT: 'Y',           // Bật custom UI
+  PLACEMENT_HANDLER: 'https://your-app.com/placement-handler',  // URL của custom UI
+  PROPERTIES: {                 // Định nghĩa các property
     propertyId1: { Name: '...', Type: 'string' },
     propertyId2: { Name: '...', Type: 'text', Multiple: 'Y' }
   }
 }
 ```
 
-**Luu y quan trong**: `PROPERTIES` dinh nghia cac truong du lieu ma Bitrix se luu. Moi property co `Name`, `Type`, va co the co `Multiple`, `Required`, `Default`.
+**Lưu ý quan trọng**: `PROPERTIES` định nghĩa các trường dữ liệu mà Bitrix sẽ lưu. Mỗi property có `Name`, `Type`, và có thể có `Multiple`, `Required`, `Default`.
 
-### 2.2. Cach DUY NHAT de luu du lieu: `BX24.placement.call('setPropertyValue', ...)`
+### 2.2. Cách DUY NHẤT để lưu dữ liệu: `BX24.placement.call('setPropertyValue', ...)`
 
-Theo tai lieu chinh thuc, **chi co MOT cach** de luu du lieu tu custom UI vao Bitrix:
+Theo tài liệu chính thức, **chỉ có MỘT cách** để lưu dữ liệu từ custom UI vào Bitrix:
 
 ```js
 BX24.placement.call('setPropertyValue', {
-    propertyId1: 'gia tri 1',
-    propertyId2: ['gia tri a', 'gia tri b']   // cho Multiple: 'Y'
+    propertyId1: 'giá trị 1',
+    propertyId2: ['giá trị a', 'giá trị b']   // cho Multiple: 'Y'
 });
 ```
 
-**Dac diem quan trong:**
-- Tham so la mot **object** voi key la **ten property** (phai khop voi PROPERTIES khi dang ky robot)
-- Value la string cho property don, array cho property Multiple
-- **KHONG can callback** - method nay tuc thoi set gia tri
-- **KHONG can su kien onSave hay bindEvent** - goi truc tiep setPropertyValue bat cu luc nao
-- Gia tri duoc **luu ngay lap tuc** vao robot configuration cua Bitrix
+**Đặc điểm quan trọng:**
+- Tham số là một **object** với key là **tên property** (phải khớp với PROPERTIES khi đăng ký robot)
+- Value là string cho property đơn, array cho property Multiple
+- **KHÔNG cần callback** - method này tức thời set giá trị
+- **KHÔNG cần sự kiện onSave hay bindEvent** - gọi trực tiếp setPropertyValue bất cứ lúc nào
+- Giá trị được **lưu ngay lập tức** vào robot configuration của Bitrix
 
-### 2.3. Khi nao goi setPropertyValue?
+### 2.3. Khi nào gọi setPropertyValue?
 
-Theo official example, **goi ngay khi user thay doi gia tri** (onchange event):
+Theo official example, **gọi ngay khi user thay đổi giá trị** (onchange event):
 
 ```html
 <input name="string" value="..."
@@ -76,32 +77,32 @@ function setPropertyValue(name, inputName, multiple) {
 }
 ```
 
-**Key insight**: Official code goi `setPropertyValue` **moi lan user thay doi input**, KHONG doi den khi bam Save. Bitrix tu dong luu gia tri nay vao robot config.
+**Key insight**: Official code gọi `setPropertyValue` **mỗi lần user thay đổi input**, KHÔNG đợi đến khi bấm Save. Bitrix tự động lưu giá trị này vào robot config.
 
-### 2.4. KHONG can va KHONG co cac method sau cho robot placement:
-- ~~`BX24.placement.call('finish', ...)`~~ - Khong ton tai cho robot placement
-- ~~`BX24.placement.call('saveSettings', ...)`~~ - Khong ton tai
-- ~~`BX24.placement.bindEvent('onSave', ...)`~~ - Khong duoc document cho robot
-- ~~`app.option.set`~~ - Day la luu data cho APP, khong phai cho robot properties
+### 2.4. KHÔNG cần và KHÔNG có các method sau cho robot placement:
+- ~~`BX24.placement.call('finish', ...)`~~ - Không tồn tại cho robot placement
+- ~~`BX24.placement.call('saveSettings', ...)`~~ - Không tồn tại
+- ~~`BX24.placement.bindEvent('onSave', ...)`~~ - Không được document cho robot
+- ~~`app.option.set`~~ - Đây là lưu data cho APP, không phải cho robot properties
 
-### 2.5. Commands va Events kha dung cho Robot Placement
+### 2.5. Commands và Events khả dụng cho Robot Placement
 
-Goi `BX24.placement.getInterface()` se tra ve danh sach commands/events kha dung.
-Cho robot placement, command chinh (va co the duy nhat) la `setPropertyValue`.
+Gọi `BX24.placement.getInterface()` sẽ trả về danh sách commands/events khả dụng.
+Cho robot placement, command chính (và có thể duy nhất) là `setPropertyValue`.
 
 ---
 
-## 3. Co che Bitrix lay du lieu khi mo lai robot
+## 3. Cơ chế Bitrix lấy dữ liệu khi mở lại robot
 
-### 3.1. Du lieu duoc truyen qua POST den PLACEMENT_HANDLER
+### 3.1. Dữ liệu được truyền qua POST đến PLACEMENT_HANDLER
 
-Khi user mo cau hinh robot, Bitrix gui POST request den `PLACEMENT_HANDLER` URL voi du lieu:
+Khi user mở cấu hình robot, Bitrix gửi POST request đến `PLACEMENT_HANDLER` URL với dữ liệu:
 
 ```
 POST /placement/robot-settings
 
 Body (form-urlencoded):
-- PLACEMENT: 'DEFAULT' hoac ten placement
+- PLACEMENT: 'DEFAULT' hoặc tên placement
 - PLACEMENT_OPTIONS: '{...}'   // JSON string
 - DOMAIN: 'xxx.bitrix24.com'
 - AUTH_ID: '...'
@@ -110,26 +111,26 @@ Body (form-urlencoded):
 - LANG: 'en'
 ```
 
-### 3.2. Cau truc cua PLACEMENT_OPTIONS
+### 3.2. Cấu trúc của PLACEMENT_OPTIONS
 
-`PLACEMENT_OPTIONS` la JSON string chua:
+`PLACEMENT_OPTIONS` là JSON string chứa:
 
 ```json
 {
   "code": "http_request_robot",      // Robot CODE
-  "activity_name": "A12345_67890",   // ID cua robot instance trong workflow
-  "properties": {                     // Dinh nghia properties (schema)
+  "activity_name": "A12345_67890",   // ID của robot instance trong workflow
+  "properties": {                     // Định nghĩa properties (schema)
     "url": { "NAME": "URL", "TYPE": "string", ... },
     "method": { "NAME": "HTTP Method", "TYPE": "select", ... },
     "config": { "NAME": "Configuration", "TYPE": "text", ... }
   },
-  "current_values": {                 // *** GIA TRI DA LUU ***
+  "current_values": {                 // *** GIÁ TRỊ ĐÃ LƯU ***
     "url": "https://api.example.com",
     "method": "POST",
     "config": "{\"url\":\"...\",\"headers\":[...]}"
   },
   "document_type": ["crm", "CCrmDocumentDeal", "DEAL"],
-  "document_fields": {               // Cac truong cua document
+  "document_fields": {               // Các trường của document
     "ID": { "Name": "Deal ID", "Type": "int" },
     "TITLE": { "Name": "Deal Title", "Type": "string" },
     ...
@@ -138,26 +139,27 @@ Body (form-urlencoded):
     "parameters": { ... },
     "variables": { ... },
     "constants": { ... },
-    "return_activities": { ... }      // Return values tu cac robot truoc
+    "global_constants": [ ... ],
+    "return_activities": { ... }      // Return values từ các robot trước
   }
 }
 ```
 
-### 3.3. Cach doc du lieu da luu DUNG
+### 3.3. Cách đọc dữ liệu đã lưu ĐÚNG
 
-**Phia server (Node.js/PHP)**: Parse `PLACEMENT_OPTIONS` tu POST body:
+**Phía server (Node.js/PHP)**: Parse `PLACEMENT_OPTIONS` từ POST body:
 
 ```js
 // Server-side (Node.js)
 app.post('/placement/robot-settings', (req, res) => {
     const options = JSON.parse(req.body.PLACEMENT_OPTIONS);
-    const currentValues = options.current_values;  // Gia tri da luu
+    const currentValues = options.current_values;  // Giá trị đã lưu
     const properties = options.properties;          // Schema
-    // Render HTML voi currentValues
+    // Render HTML với currentValues
 });
 ```
 
-**Phia client (BX24 JS SDK)**: Goi `BX24.placement.info()`:
+**Phía client (BX24 JS SDK)**: Gọi `BX24.placement.info()`:
 
 ```js
 BX24.init(function() {
@@ -171,22 +173,22 @@ BX24.init(function() {
 });
 ```
 
-### 3.4. QUAN TRONG: Hai cach doc du lieu
+### 3.4. QUAN TRỌNG: Hai cách đọc dữ liệu
 
-| Cach | Nguon | Khi nao dung |
+| Cách | Nguồn | Khi nào dùng |
 |------|-------|--------------|
-| Server-side: `req.body.PLACEMENT_OPTIONS` | POST body tu Bitrix | Khi render HTML ban dau |
-| Client-side: `BX24.placement.info().options` | BX24 JS SDK | Khi can doc tu JavaScript |
+| Server-side: `req.body.PLACEMENT_OPTIONS` | POST body từ Bitrix | Khi render HTML ban đầu |
+| Client-side: `BX24.placement.info().options` | BX24 JS SDK | Khi cần đọc từ JavaScript |
 
-**Ca hai deu tra ve cung mot du lieu** - `current_values` chua gia tri da luu truoc do.
+**Cả hai đều trả về cùng một dữ liệu** - `current_values` chứa giá trị đã lưu trước đó.
 
 ---
 
 ## 4. Official Code Example (Full)
 
-Day la code CHINH THUC tu Bitrix24 docs (https://apidocs.bitrix24.com/tutorials/bizproc/setting-robot.html):
+Đây là code CHÍNH THỨC từ Bitrix24 docs (https://apidocs.bitrix24.com/tutorials/bizproc/setting-robot.html):
 
-### 4.1. Dang ky robot:
+### 4.1. Đăng ký robot:
 
 ```js
 var params = {
@@ -218,19 +220,19 @@ BX24.callMethod('bizproc.robot.add', params, function(result) {
 
 ```php
 <?php
-// Phan biet: trang install hay trang placement
+// Phân biệt: trang install hay trang placement
 if (!isset($_POST['PLACEMENT']) || $_POST['PLACEMENT'] === 'DEFAULT'):
-    // Hien thi trang quan ly robot (install/uninstall)
+    // Hiển thị trang quản lý robot (install/uninstall)
 else:
-    // Hien thi form cau hinh robot
+    // Hiển thị form cấu hình robot
     $options = json_decode($_POST['PLACEMENT_OPTIONS'], true);
 
     foreach ($options['properties'] as $id => $property) {
         $multiple = isset($property['MULTIPLE']) && $property['MULTIPLE'] === 'Y';
-        $val = (array) $options['current_values'][$id];  // *** DOC GIA TRI DA LUU ***
+        $val = (array) $options['current_values'][$id];  // *** ĐỌC GIÁ TRỊ ĐÃ LƯU ***
 
         if (!$val) $val[] = '';
-        if ($multiple) $val[] = '';   // Them 1 input trong cho Multiple
+        if ($multiple) $val[] = '';   // Thêm 1 input trống cho Multiple
 
         $name = $multiple ? $id.'[]' : $id;
         ?>
@@ -259,25 +261,25 @@ function setPropertyValue(name, inputName, multiple) {
 </script>
 ```
 
-### 4.3. Diem mau chot tu official code:
+### 4.3. Điểm mấu chốt từ official code:
 
-1. **Server render form** tu `$_POST['PLACEMENT_OPTIONS']` - khong dung BX24.placement.info() de load
-2. **current_values** chua **gia tri da luu** tu lan truoc
-3. **setPropertyValue** duoc goi **moi khi user thay doi input** (onchange)
-4. **KHONG co nut Save** - du lieu tu dong luu khi goi setPropertyValue
-5. **KHONG co bindEvent, onSave, finish** - chi can setPropertyValue
+1. **Server render form** từ `$_POST['PLACEMENT_OPTIONS']` - không dùng BX24.placement.info() để load
+2. **current_values** chứa **giá trị đã lưu** từ lần trước
+3. **setPropertyValue** được gọi **mỗi khi user thay đổi input** (onchange)
+4. **KHÔNG có nút Save** - dữ liệu tự động lưu khi gọi setPropertyValue
+5. **KHÔNG có bindEvent, onSave, finish** - chỉ cần setPropertyValue
 
 ---
 
-## 5. Phan tich code hien tai va loi
+## 5. Phân tích code hiện tại và lỗi
 
-### 5.1. Cach dang ky robot (install.js) - CO VAN DE
+### 5.1. Cách đăng ký robot (install.js) - CÓ VẤN ĐỀ
 
-**Van de 1: Property `config` luu JSON phuc tap**
+**Vấn đề 1: Property `config` lưu JSON phức tạp**
 
 ```js
 PROPERTIES: {
-    config: {           // Luu toan bo config dang JSON string
+    config: {           // Lưu toàn bộ config dạng JSON string
         Type: 'text',
         Required: 'N'
     },
@@ -287,9 +289,9 @@ PROPERTIES: {
 }
 ```
 
-Day la cach tiep can khong theo docs. Official example dung **tung property rieng le**, khong gom het vao 1 truong JSON.
+Đây là cách tiếp cận không theo docs. Official example dùng **từng property riêng lẻ**, không gom hết vào 1 trường JSON.
 
-**Van de 2: Goi setPropertyValue chi khi bam Save**
+**Vấn đề 2: Gọi setPropertyValue chỉ khi bấm Save**
 
 ```js
 document.getElementById('configForm').addEventListener('submit', function(e) {
@@ -300,12 +302,12 @@ document.getElementById('configForm').addEventListener('submit', function(e) {
 });
 ```
 
-Official code goi `setPropertyValue` **moi khi input thay doi** (onchange), KHONG doi save.
+Official code gọi `setPropertyValue` **mỗi khi input thay đổi** (onchange), KHÔNG đợi save.
 
-### 5.2. Cach doc du lieu (placementHandler.js) - CO VAN DE
+### 5.2. Cách đọc dữ liệu (placementHandler.js) - CÓ VẤN ĐỀ
 
 ```js
-// Hien tai: doc tu BX24.placement.info() phia client
+// Hiện tại: đọc từ BX24.placement.info() phía client
 function loadConfiguration() {
     const placementOptions = BX24.placement.info();
     if (placementOptions.options &&
@@ -317,88 +319,88 @@ function loadConfiguration() {
 }
 ```
 
-**Van de**: Official code doc du lieu **phia server** tu `$_POST['PLACEMENT_OPTIONS']` roi render HTML voi gia tri da co san. Cach dung BX24.placement.info() cung co the hoat dong nhung PLACEMENT_OPTIONS duoc gui dang JSON string trong POST body - can xac nhan BX24.placement.info().options co chua `current_values` hay khong.
+**Vấn đề**: Official code đọc dữ liệu **phía server** từ `$_POST['PLACEMENT_OPTIONS']` rồi render HTML với giá trị đã có sẵn. Cách dùng BX24.placement.info() cũng có thể hoạt động nhưng PLACEMENT_OPTIONS được gửi dạng JSON string trong POST body - cần xác nhận BX24.placement.info().options có chứa `current_values` hay không.
 
-### 5.3. Tom tat loi chinh
+### 5.3. Tóm tắt lỗi chính
 
-| # | Loi | Official way |
+| # | Lỗi | Cách đúng (Official) |
 |---|-----|-------------|
-| 1 | Goi setPropertyValue khi bam Save | Goi setPropertyValue moi khi input thay doi (onchange) |
-| 2 | Dung 1 property `config` chua JSON phuc tap | Dung tung property rieng le |
-| 3 | Doc du lieu hoan toan o client-side | Doc du lieu o server-side tu POST body, render HTML san |
-| 4 | Form co nut Save rieng | Khong can nut Save - auto save khi thay doi |
-| 5 | Thu dung bindEvent, onSave, finish | Chi dung setPropertyValue |
+| 1 | Gọi setPropertyValue khi bấm Save | Gọi setPropertyValue mỗi khi input thay đổi (onchange) |
+| 2 | Dùng 1 property `config` chứa JSON phức tạp | Dùng từng property riêng lẻ |
+| 3 | Đọc dữ liệu hoàn toàn ở client-side | Đọc dữ liệu ở server-side từ POST body, render HTML sẵn |
+| 4 | Form có nút Save riêng | Không cần nút Save - auto save khi thay đổi |
+| 5 | Thử dùng bindEvent, onSave, finish | Chỉ dùng setPropertyValue |
 
 ---
 
-## 6. De xuat giai phap
+## 6. Đề xuất giải pháp
 
-### Phuong an A: Theo sat Official Pattern (Khuyen nghi)
+### Phương án A: Theo sát Official Pattern (Khuyến nghị)
 
-1. **Server-side render**: Doc `PLACEMENT_OPTIONS` tu POST body, parse JSON, render HTML voi gia tri da luu
-2. **setPropertyValue on change**: Goi `setPropertyValue` moi khi user thay doi bat ky input nao
-3. **Bo nut Save**: Khong can nut Save - Bitrix tu dong luu khi user bam nut "LUU" cua Bitrix
-4. **Giu PROPERTIES don gian**: Moi truong la 1 property rieng (url, method, headers, body, timeout)
+1. **Server-side render**: Đọc `PLACEMENT_OPTIONS` từ POST body, parse JSON, render HTML với giá trị đã lưu
+2. **setPropertyValue on change**: Gọi `setPropertyValue` mỗi khi user thay đổi bất kỳ input nào
+3. **Bỏ nút Save**: Không cần nút Save - Bitrix tự động lưu khi user bấm nút "LƯU" của Bitrix
+4. **Giữ PROPERTIES đơn giản**: Mỗi trường là 1 property riêng (url, method, headers, body, timeout)
 
-**Uu diem**: Theo dung official pattern, dam bao hoat dong
-**Nhuoc diem**: Kho luu cau truc phuc tap (headers array, auth config) vi PROPERTIES chi ho tro cac kieu don gian (string, text, int, select, user, datetime)
+**Ưu điểm**: Theo đúng official pattern, đảm bảo hoạt động
+**Nhược điểm**: Khó lưu cấu trúc phức tạp (headers array, auth config) vì PROPERTIES chỉ hỗ trợ các kiểu đơn giản (string, text, int, select, user, datetime)
 
-### Phuong an B: Hybrid - dung 1 property `config` nhung fix cach save/load
+### Phương án B: Hybrid - dùng 1 property `config` nhưng fix cách save/load
 
-1. **Giu property `config` (Type: text)** de luu JSON phuc tap
-2. **Goi setPropertyValue NGAY khi input thay doi** (debounced)
-3. **Server-side render**: Doc current_values.config tu POST body
-4. **Bo nut Save**
+1. **Giữ property `config` (Type: text)** để lưu JSON phức tạp
+2. **Gọi setPropertyValue NGAY khi input thay đổi** (debounced)
+3. **Server-side render**: Đọc current_values.config từ POST body
+4. **Bỏ nút Save**
 
-**Uu diem**: Luu duoc cau truc phuc tap (headers, auth, form data)
-**Nhuoc diem**: Khong hoan toan theo official pattern, nhung van dung setPropertyValue dung cach
+**Ưu điểm**: Lưu được cấu trúc phức tạp (headers, auth, form data)
+**Nhược điểm**: Không hoàn toàn theo official pattern, nhưng vẫn dùng setPropertyValue đúng cách
 
-### Phuong an C: Multi-property + config backup
+### Phương án C: Multi-property + config backup
 
-1. **Dung tung property cho cac truong chinh**: url, method, timeout (de Bitrix hien thi trong summary)
-2. **Them property `config` (Type: text)** de luu toan bo cau hinh chi tiet
-3. **setPropertyValue on change** cho tat ca properties
-4. **Server-side render** uu tien doc tu current_values
+1. **Dùng từng property cho các trường chính**: url, method, timeout (để Bitrix hiển thị trong summary)
+2. **Thêm property `config` (Type: text)** để lưu toàn bộ cấu hình chi tiết
+3. **setPropertyValue on change** cho tất cả properties
+4. **Server-side render** ưu tiên đọc từ current_values
 
-**Uu diem**: Ket hop ca hai, Bitrix co the hien thi url/method trong summary, config luu chi tiet
-**Nhuoc diem**: Du lieu bi duplicate
+**Ưu điểm**: Kết hợp cả hai, Bitrix có thể hiển thị url/method trong summary, config lưu chi tiết
+**Nhược điểm**: Dữ liệu bị duplicate
 
 ---
 
-## Phu luc: API Reference
+## Phụ lục: API Reference
 
 ### BX24.placement.call('setPropertyValue', params)
-- **Muc dich**: Luu gia tri property cua robot
+- **Mục đích**: Lưu giá trị property của robot
 - **params**: Object `{ propertyName: value, ... }`
-- **Khong co callback**
-- **Goi bat cu luc nao** sau khi BX24.init()
+- **Không có callback**
+- **Gọi bất cứ lúc nào** sau khi BX24.init()
 
 ### BX24.placement.info()
-- **Tra ve**: `{ placement: string, options: object }`
-- **options** chua thong tin ve robot placement (properties, current_values, document_fields, template)
+- **Trả về**: `{ placement: string, options: object }`
+- **options** chứa thông tin về robot placement (properties, current_values, document_fields, template)
 
 ### BX24.placement.getInterface(callback)
-- **Tra ve**: `{ command: array, event: array }`
-- Dung de xac nhan commands kha dung (vd: setPropertyValue)
+- **Trả về**: `{ command: array, event: array }`
+- Dùng để xác nhận commands khả dụng (vd: setPropertyValue)
 
-### POST data den PLACEMENT_HANDLER
-- `PLACEMENT`: Ten placement
-- `PLACEMENT_OPTIONS`: JSON string chua properties, current_values, document_fields, template
+### POST data đến PLACEMENT_HANDLER
+- `PLACEMENT`: Tên placement
+- `PLACEMENT_OPTIONS`: JSON string chứa properties, current_values, document_fields, template
 - `DOMAIN`, `AUTH_ID`, `REFRESH_ID`, `member_id`, `LANG`, etc.
 
 ---
 
-## 7. Ket qua thuc nghiem - Nhung thay doi dan den thanh cong
+## 7. Kết quả thực nghiệm - Những thay đổi dẫn đến thành công
 
-### 7.1. Milestone: URL luu thanh cong (commit 3480770)
+### 7.1. Milestone: URL lưu thành công (commit 3480770)
 
-**Phuong an da chon**: Phuong an B (Hybrid) - dung 1 property `config` (Type: text) luu JSON.
+**Phương án đã chọn**: Phương án B (Hybrid) - dùng 1 property `config` (Type: text) lưu JSON.
 
-**3 thay doi quan trong dan den URL luu/load thanh cong:**
+**3 thay đổi quan trọng dẫn đến URL lưu/load thành công:**
 
-#### Thay doi 1: Server-side parse PLACEMENT_OPTIONS (placementHandler.js)
-**Truoc**: Chi doc du lieu phia client qua `BX24.placement.info()`
-**Sau**: Server doc `req.body.PLACEMENT_OPTIONS`, parse JSON, lay `current_values.config`, inject vao HTML dang `window.__SAVED_CONFIG__`
+#### Thay đổi 1: Server-side parse PLACEMENT_OPTIONS (placementHandler.js)
+**Trước**: Chỉ đọc dữ liệu phía client qua `BX24.placement.info()`
+**Sau**: Server đọc `req.body.PLACEMENT_OPTIONS`, parse JSON, lấy `current_values.config`, inject vào HTML dạng `window.__SAVED_CONFIG__`
 
 ```js
 // Server-side
@@ -407,15 +409,15 @@ const options = JSON.parse(req.body.PLACEMENT_OPTIONS);
 if (options.current_values && options.current_values.config) {
     savedConfig = JSON.parse(options.current_values.config);
 }
-// Inject vao HTML
+// Inject vào HTML
 res.send(`<script>window.__SAVED_CONFIG__ = ${JSON.stringify(savedConfig)};</script> ...`);
 ```
 
-**Tai sao quan trong**: Dam bao du lieu co san ngay khi HTML load, khong phu thuoc vao timing cua BX24 SDK.
+**Tại sao quan trọng**: Đảm bảo dữ liệu có sẵn ngay khi HTML load, không phụ thuộc vào timing của BX24 SDK.
 
-#### Thay doi 2: setPropertyValue goi moi khi input thay doi (debounced 300ms)
-**Truoc**: Chi goi `setPropertyValue` khi user bam nut Save
-**Sau**: Moi input co `oninput="saveToPlacement()"`, goi debounced `setPropertyValue`
+#### Thay đổi 2: setPropertyValue gọi mỗi khi input thay đổi (debounced 300ms)
+**Trước**: Chỉ gọi `setPropertyValue` khi user bấm nút Save
+**Sau**: Mỗi input có `oninput="saveToPlacement()"`, gọi debounced `setPropertyValue`
 
 ```js
 var saveTimeout = null;
@@ -428,62 +430,62 @@ function saveToPlacement() {
 }
 ```
 
-**Tai sao quan trong**: Bitrix chi luu gia tri khi user bam nut "LUU" cua Bitrix - nhung gia tri phai da duoc set truoc do qua `setPropertyValue`. Neu chi set khi bam Save cua minh, gia tri chua duoc truyen cho Bitrix truoc khi Bitrix close placement.
+**Tại sao quan trọng**: Bitrix chỉ lưu giá trị khi user bấm nút "LƯU" của Bitrix - nhưng giá trị phải đã được set trước đó qua `setPropertyValue`. Nếu chỉ set khi bấm Save của mình, giá trị chưa được truyền cho Bitrix trước khi Bitrix close placement.
 
-#### Thay doi 3: Don gian hoa PROPERTIES chi giu `config` (install.js)
-**Truoc**: 6 properties (config, url, method, headers, body, timeout) - du thua, conflict
-**Sau**: Chi 1 property `config` (Type: text) chua JSON
+#### Thay đổi 3: Đơn giản hóa PROPERTIES chỉ giữ `config` (install.js)
+**Trước**: 6 properties (config, url, method, headers, body, timeout) - dư thừa, conflict
+**Sau**: Chỉ 1 property `config` (Type: text) chứa JSON
 
-**Tai sao quan trong**: Tranh confusion giua individual properties va config JSON. executeHandler da doc tu config JSON, khong can individual properties.
+**Tại sao quan trọng**: Tránh confusion giữa individual properties và config JSON. executeHandler đã đọc từ config JSON, không cần individual properties.
 
-### 7.2. Milestone: Body (Form Data) luu thanh cong (commit 4968170)
+### 7.2. Milestone: Body (Form Data) lưu thành công (commit 4968170)
 
-**3 bugs da fix:**
+**3 bugs đã fix:**
 
-1. **`body-form-data` section hien thi khi khong nen**: Section form-data khong co `display:none` trong HTML mac dinh. Khi bodyType la 'none', user thay form-data section va co the nhap data, nhung `currentBodyType` van la 'none' → `getCurrentConfig()` bo qua body data vi `currentBodyType !== 'form-data'`. Fix: them `style="display: none;"` cho `body-form-data` section.
+1. **`body-form-data` section hiển thị khi không nên**: Section form-data không có `display:none` trong HTML mặc định. Khi bodyType là 'none', user thấy form-data section và có thể nhập data, nhưng `currentBodyType` vẫn là 'none' → `getCurrentConfig()` bỏ qua body data vì `currentBodyType !== 'form-data'`. Fix: thêm `style="display: none;"` cho `body-form-data` section.
 
-2. **Load khong hide/show dung cac body section**: Khi load saved config voi bodyType 'raw', code chi show raw section ma KHONG hide form-data section (va nguoc lai). Fix: set `display` cho CA HAI section khi load (`form-data` va `raw`).
+2. **Load không hide/show đúng các body section**: Khi load saved config với bodyType 'raw', code chỉ show raw section mà KHÔNG hide form-data section (và ngược lại). Fix: set `display` cho CẢ HAI section khi load (`form-data` và `raw`).
 
-3. **rawBody khong load khi gia tri rong**: Dieu kien `config.rawBody` la falsy khi rawBody la `''` (empty string). Fix: bo dieu kien `&& config.rawBody`, luon set rawBody value (dung `config.rawBody || ''`).
+3. **rawBody không load khi giá trị rỗng**: Điều kiện `config.rawBody` là falsy khi rawBody là `''` (empty string). Fix: bỏ điều kiện `&& config.rawBody`, luôn set rawBody value (dùng `config.rawBody || ''`).
 
-**Bai hoc**: Khi co nhieu section an/hien, phai dam bao:
-- Tat ca section an mac dinh (display:none)
-- Khi load, set display cho TAT CA section (khong chi section can hien)
-- Khong dung truthy check cho cac gia tri co the la empty string
+**Bài học**: Khi có nhiều section ẩn/hiện, phải đảm bảo:
+- Tất cả section ẩn mặc định (display:none)
+- Khi load, set display cho TẤT CẢ section (không chỉ section cần hiện)
+- Không dùng truthy check cho các giá trị có thể là empty string
 
-### 7.3. Milestone: Save reliability fix (commit cc60edd)
+### 7.3. Milestone: Fix độ tin cậy của Save (commit cc60edd)
 
-**Van de**: User thay doi gia tri, bam LUU nhung Bitrix giu gia tri cu.
+**Vấn đề**: User thay đổi giá trị, bấm LƯU nhưng Bitrix giữ giá trị cũ.
 
-**2 nguyen nhan chinh:**
+**2 nguyên nhân chính:**
 
-1. **Race condition voi debounce 300ms**: User bam LUU cua Bitrix truoc khi debounce timeout ket thuc → `setPropertyValue` chua duoc goi → Bitrix luu gia tri cu.
+1. **Race condition với debounce 300ms**: User bấm LƯU của Bitrix trước khi debounce timeout kết thúc → `setPropertyValue` chưa được gọi → Bitrix lưu giá trị cũ.
 
-2. **Stale JS array**: `getCurrentConfig()` doc tu `formDataRows`/`headerRows` JS array thay vi truc tiep tu DOM. Khi user sua truc tiep trong input, array co the khong dong bo voi DOM.
+2. **Stale JS array**: `getCurrentConfig()` đọc từ `formDataRows`/`headerRows` JS array thay vì trực tiếp từ DOM. Khi user sửa trực tiếp trong input, array có thể không đồng bộ với DOM.
 
 **Fix:**
-- Tach `saveToPlacement()` (debounced 150ms, cho oninput) va `flushSave()` (goi ngay, cho onchange/blur/structural changes)
-- `getCurrentConfig()` doc headers va formData truc tiep tu DOM bang `querySelectorAll` thay vi tu JS array
-- Them `lastSavedConfig` de skip duplicate saves
-- Them callback cho `setPropertyValue` de log ket qua
+- Tách `saveToPlacement()` (debounced 150ms, cho oninput) và `flushSave()` (gọi ngay, cho onchange/blur/structural changes)
+- `getCurrentConfig()` đọc headers và formData trực tiếp từ DOM bằng `querySelectorAll` thay vì từ JS array
+- Thêm `lastSavedConfig` để skip duplicate saves
+- Thêm callback cho `setPropertyValue` để log kết quả
 
-### 7.4. Milestone: Bitrix variable resolution thanh cong (commit b12e236)
+### 7.4. Milestone: Biến Bitrix được resolve thành công (commit b12e236)
 
-**Van de**: Bien template nhu `{=Document:CRM_ID}` bi Bitrix auto-convert thanh display name `{{CRM item ID}}` trong `current_values`. Khi user mo lai settings va save bat ky thay doi, code gui `{{CRM item ID}}` (display name) nguoc lai → Bitrix coi la literal string → khong resolve khi robot chay.
+**Vấn đề**: Biến template như `{=Document:CRM_ID}` bị Bitrix auto-convert thành display name `{{CRM item ID}}` trong `current_values`. Khi user mở lại settings và save bất kỳ thay đổi, code gửi `{{CRM item ID}}` (display name) ngược lại → Bitrix coi là literal string → không resolve khi robot chạy.
 
-**Phat hien quan trong ve Bitrix variable system:**
+**Phát hiện quan trọng về hệ thống biến Bitrix:**
 
-| Khia canh | Chi tiet |
+| Khía cạnh | Chi tiết |
 |-----------|---------|
-| Cu phap dung | `{=Document:FIELD_CODE}` (VD: `{=Document:CRM_ID}`) |
-| Display name | Bitrix auto-convert thanh `{{Display Name}}` trong current_values |
-| Resolve | Bitrix resolve `{=Document:CODE}` trong TEXT properties khi robot chay, KE CA khi nam trong JSON string |
-| document_fields | PLACEMENT_OPTIONS chua `document_fields` mapping FIELD_CODE → Display Name |
+| Cú pháp đúng | `{=Document:FIELD_CODE}` (VD: `{=Document:CRM_ID}`) |
+| Display name | Bitrix tự động convert thành `{{Display Name}}` trong current_values |
+| Resolve | Bitrix resolve `{=Document:CODE}` trong TEXT properties khi robot chạy, KỂ CẢ khi nằm trong JSON string |
+| document_fields | PLACEMENT_OPTIONS chứa `document_fields` mapping FIELD_CODE → Display Name |
 
 **Fix - `convertConfigDisplayNames()`:**
-- Build reverse map tu `availableVariables`: display name → `{=Document:CODE}`
-- Truoc khi goi `setPropertyValue`, scan toan bo config va replace `{{Display Name}}` → `{=Document:CODE}`
-- Dam bao Bitrix luon nhan dung bizproc syntax de resolve
+- Build reverse map từ `availableVariables`: display name → `{=Document:CODE}`
+- Trước khi gọi `setPropertyValue`, scan toàn bộ config và replace `{{Display Name}}` → `{=Document:CODE}`
+- Đảm bảo Bitrix luôn nhận đúng cú pháp bizproc để resolve
 
 ```js
 // Reverse mapping
@@ -496,21 +498,21 @@ function convertDisplayToTemplate(str) {
 }
 ```
 
-**Ket qua thuc nghiem - Robot chay thanh cong:**
+**Kết quả thực nghiệm - Robot chạy thành công:**
 ```
-Cau hinh:               → Gia tri nhan duoc:
-{=Document:CRM_ID}      → "L_262"
-{=Document:OPPORTUNITY}  → "0.00"
-{=Document:STATUS_ID_PRINTABLE} → "Submitted Form"
-{=Document:TIME_CREATE}  → "23:48"
+Cấu hình:                          → Giá trị nhận được:
+{=Document:CRM_ID}                  → "L_262"
+{=Document:OPPORTUNITY}              → "0.00"
+{=Document:STATUS_ID_PRINTABLE}      → "Submitted Form"
+{=Document:TIME_CREATE}              → "23:48"
 ```
 
-### 7.5. Variable Picker - Hien thi va su dung
+### 7.5. Variable Picker - Hiển thị và sử dụng
 
-Variable picker (nut `⋯`) doc `document_fields` tu PLACEMENT_OPTIONS va hien thi tat ca truong kha dung.
+Variable picker (nút `⋯`) đọc `document_fields` từ PLACEMENT_OPTIONS và hiển thị tất cả trường khả dụng.
 
-**Cac loai bien duoc ho tro:**
-| Loai | Template format | Vi du |
+**Các loại biến được hỗ trợ:**
+| Loại | Template format | Ví dụ |
 |------|----------------|-------|
 | Document fields | `{=Document:FIELD_CODE}` | `{=Document:CRM_ID}`, `{=Document:TITLE}` |
 | Template variables | `{=Variable:ID}` | `{=Variable:var_123}` |
@@ -518,32 +520,32 @@ Variable picker (nut `⋯`) doc `document_fields` tu PLACEMENT_OPTIONS va hien t
 | Global constants | `{=GlobalConst:ID}` | `{=GlobalConst:Constant1735836371481}` |
 | Global variables | `{=GlobalVar:ID}` | `{=GlobalVar:Variable_123}` |
 
-### 7.6. Full Data Flow (da xac nhan hoat dong)
+### 7.6. Full Data Flow (đã xác nhận hoạt động)
 
 ```
-1. User mo robot settings
-   → Bitrix POST den PLACEMENT_HANDLER voi PLACEMENT_OPTIONS
+1. User mở robot settings
+   → Bitrix POST đến PLACEMENT_HANDLER với PLACEMENT_OPTIONS
    → Server parse current_values.config, inject window.__SAVED_CONFIG__
-   → Client load form, hien thi {{Display Name}} (tu Bitrix)
+   → Client load form, hiển thị {{Display Name}} (từ Bitrix)
 
-2. User thay doi config (nhap tay hoac dung variable picker)
+2. User thay đổi config (nhập tay hoặc dùng variable picker)
    → oninput: saveToPlacement() (debounced 150ms)
-   → onchange/blur: flushSave() (ngay lap tuc)
+   → onchange/blur: flushSave() (ngay lập tức)
    → convertConfigDisplayNames() convert {{Name}} → {=Document:CODE}
    → BX24.placement.call('setPropertyValue', {config: JSON.stringify(...)})
 
-3. User bam LUU cua Bitrix
-   → Bitrix doc gia tri tu setPropertyValue, luu vao robot config
+3. User bấm LƯU của Bitrix
+   → Bitrix đọc giá trị từ setPropertyValue, lưu vào robot config
 
-4. Robot chay (trigger boi automation rule)
-   → Bitrix resolve {=Document:CODE} → gia tri thuc
-   → POST den execute handler voi properties.config (JSON voi gia tri thuc)
-   → executeHandler parse config, thuc hien HTTP request
-   → Gui ket qua ve Bitrix qua bizproc.event.send
+4. Robot chạy (trigger bởi automation rule)
+   → Bitrix resolve {=Document:CODE} → giá trị thực
+   → POST đến execute handler với properties.config (JSON với giá trị thực)
+   → executeHandler parse config, thực hiện HTTP request
+   → Gửi kết quả về Bitrix qua bizproc.event.send
 ```
 
 ---
 
-*Research compiled: 2026-02-11*
-*Sources: Bitrix24 Official REST API Docs, b24restdocs GitHub, Bitrix MCP*
-*Last updated: 2026-02-11 - Full pipeline verified working*
+*Tài liệu nghiên cứu: 2026-02-11*
+*Nguồn: Bitrix24 Official REST API Docs, b24restdocs GitHub, Bitrix MCP*
+*Cập nhật lần cuối: 2026-02-11 - Toàn bộ pipeline đã xác nhận hoạt động*
