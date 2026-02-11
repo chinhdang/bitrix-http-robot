@@ -1212,6 +1212,28 @@ async function handleRobotSettings(req, res) {
             });
           }
 
+          // Get global constants if available
+          if (options.template && options.template.global_constants && Array.isArray(options.template.global_constants)) {
+            options.template.global_constants.forEach(function(constant) {
+              availableVariables.push({
+                code: constant.Id,
+                name: '[Const] ' + (constant.Name || constant.Id),
+                template: '{=GlobalConst:' + constant.Id + '}'
+              });
+            });
+          }
+
+          // Get global variables if available
+          if (options.template && options.template.global_variables && Array.isArray(options.template.global_variables)) {
+            options.template.global_variables.forEach(function(variable) {
+              availableVariables.push({
+                code: variable.Id,
+                name: '[GVar] ' + (variable.Name || variable.Id),
+                template: '{=GlobalVar:' + variable.Id + '}'
+              });
+            });
+          }
+
           console.log('Available variables:', availableVariables);
         } catch (e) {
           console.error('Error parsing placement options:', e);
@@ -1384,14 +1406,19 @@ async function handleRobotSettings(req, res) {
       console.log('showCustomVariablePicker called');
       console.log('Available variables:', availableVariables);
 
-      // Default variables if none loaded yet
+      // Default variables if none loaded from placement
       if (availableVariables.length === 0) {
-        console.log('No variables loaded, using defaults');
+        console.log('No variables loaded from placement, using common defaults');
         availableVariables = [
-          { code: 'ID', name: 'Document ID', template: '{=Document:ID}' },
-          { code: 'TITLE', name: 'Document Title', template: '{=Document:TITLE}' },
-          { code: 'CREATED_BY', name: 'Created By', template: '{=Document:CREATED_BY}' },
-          { code: 'MODIFIED_BY', name: 'Modified By', template: '{=Document:MODIFIED_BY}' },
+          { code: 'ID', name: 'ID', template: '{=Document:ID}' },
+          { code: 'CRM_ID', name: 'CRM item ID', template: '{=Document:CRM_ID}' },
+          { code: 'TITLE', name: 'Lead name / Deal name', template: '{=Document:TITLE}' },
+          { code: 'STATUS_ID', name: 'Stage', template: '{=Document:STATUS_ID}' },
+          { code: 'ASSIGNED_BY_ID', name: 'Responsible', template: '{=Document:ASSIGNED_BY_ID}' },
+          { code: 'NAME', name: 'Name', template: '{=Document:NAME}' },
+          { code: 'LAST_NAME', name: 'Last name', template: '{=Document:LAST_NAME}' },
+          { code: 'EMAIL', name: 'E-mail', template: '{=Document:EMAIL}' },
+          { code: 'PHONE', name: 'Phone', template: '{=Document:PHONE}' },
         ];
       }
 
