@@ -723,16 +723,12 @@ async function handleRobotSettings(req, res) {
 
     /* Output Mapping Rows */
     .output-mapping-row {
-      background: var(--color-bg);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      padding: 8px 10px;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
 
     .output-mapping-inputs {
       display: grid;
-      grid-template-columns: auto 1fr 1fr 28px;
+      grid-template-columns: auto 1fr 1fr 32px;
       gap: 6px;
       align-items: center;
     }
@@ -746,16 +742,6 @@ async function handleRobotSettings(req, res) {
       font-weight: 600;
       color: var(--color-primary);
       white-space: nowrap;
-    }
-
-    .output-mapping-row .btn-danger {
-      width: 28px;
-      height: 28px;
-      padding: 0;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
 
     /* Test Request Styles */
@@ -931,35 +917,35 @@ async function handleRobotSettings(req, res) {
 
     /* Inline Mapping Preview */
     .mapping-preview {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 6px;
       font-size: 11px;
       font-family: 'Monaco', 'Courier New', monospace;
       color: var(--color-text-muted);
-      padding: 4px 0 0 0;
-      margin-left: 2px;
+      padding: 2px 0 0 0;
       line-height: 1.3;
+    }
+
+    .mapping-preview:empty, .mapping-preview:not(:has(*)) { display: none; }
+
+    .mapping-preview .preview-label {
+      text-align: right;
+      font-size: 11px;
+      font-weight: 600;
+      color: transparent;
+      white-space: nowrap;
+    }
+
+    .mapping-preview .preview-text {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
-    .mapping-preview:empty { display: none; }
-
-    .preview-value {
-      color: #16a34a;
-      background: #f0fdf4;
-      padding: 1px 6px;
-      border-radius: 3px;
-    }
-    .preview-not-found {
-      color: #9ca3af;
-      font-style: italic;
-    }
-    .preview-fallback {
-      color: #ea580c;
-      background: #fff7ed;
-      padding: 1px 6px;
-      border-radius: 3px;
-    }
+    .preview-value { color: #16a34a; }
+    .preview-not-found { color: #9ca3af; font-style: italic; }
+    .preview-fallback { color: #ea580c; }
   </style>
 </head>
 <body>
@@ -2342,14 +2328,17 @@ async function handleRobotSettings(req, res) {
 
         var value = extractJsonPathClient(lastTestResponseParsed, path);
 
+        var slotLabel = rowEl.querySelector('.output-slot-label');
+        var spacer = '<span class="preview-label">' + (slotLabel ? slotLabel.textContent : '') + '</span>';
+
         if (value !== undefined) {
           var display = typeof value === 'object' ? JSON.stringify(value) : String(value);
-          if (display.length > 80) display = display.substring(0, 80) + '...';
-          previewEl.innerHTML = '\\u2192 <span class="preview-value">' + escapeHtml(display) + '</span>';
+          if (display.length > 100) display = display.substring(0, 100) + '...';
+          previewEl.innerHTML = spacer + '<span class="preview-text"><span class="preview-value">\\u2192 ' + escapeHtml(display) + '</span></span>';
         } else if (fallback) {
-          previewEl.innerHTML = '\\u2192 <span class="preview-fallback">fallback: ' + escapeHtml(fallback) + '</span>';
+          previewEl.innerHTML = spacer + '<span class="preview-text"><span class="preview-fallback">\\u2192 fallback: ' + escapeHtml(fallback) + '</span></span>';
         } else {
-          previewEl.innerHTML = '\\u2192 <span class="preview-not-found">not found</span>';
+          previewEl.innerHTML = spacer + '<span class="preview-text"><span class="preview-not-found">\\u2192 not found</span></span>';
         }
       });
     }
