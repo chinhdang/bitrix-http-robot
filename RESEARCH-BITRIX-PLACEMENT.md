@@ -436,9 +436,23 @@ function saveToPlacement() {
 
 **Tai sao quan trong**: Tranh confusion giua individual properties va config JSON. executeHandler da doc tu config JSON, khong can individual properties.
 
-### 7.2. Van de con lai
-- **Body** (raw body, form data): Chua luu/load thanh cong - can dieu tra tiep
-- Can kiem tra: bodyType co duoc set dung khi switch tab khong, getCurrentConfig() co tra ve body data khong
+### 7.2. Milestone: Body (Form Data) luu thanh cong (commit 4968170)
+
+**3 bugs da fix:**
+
+1. **`body-form-data` section hien thi khi khong nen**: Section form-data khong co `display:none` trong HTML mac dinh. Khi bodyType la 'none', user thay form-data section va co the nhap data, nhung `currentBodyType` van la 'none' → `getCurrentConfig()` bo qua body data vi `currentBodyType !== 'form-data'`. Fix: them `style="display: none;"` cho `body-form-data` section.
+
+2. **Load khong hide/show dung cac body section**: Khi load saved config voi bodyType 'raw', code chi show raw section ma KHONG hide form-data section (va nguoc lai). Fix: set `display` cho CA HAI section khi load (`form-data` va `raw`).
+
+3. **rawBody khong load khi gia tri rong**: Dieu kien `config.rawBody` la falsy khi rawBody la `''` (empty string). Fix: bo dieu kien `&& config.rawBody`, luon set rawBody value (dung `config.rawBody || ''`).
+
+**Bai hoc**: Khi co nhieu section an/hien, phai dam bao:
+- Tat ca section an mac dinh (display:none)
+- Khi load, set display cho TAT CA section (khong chi section can hien)
+- Khong dung truthy check cho cac gia tri co the la empty string
+
+### 7.3. Van de con lai
+- Robot execution: can kiem tra executeHandler co gui HTTP request dung config da luu khong
 
 ---
 
