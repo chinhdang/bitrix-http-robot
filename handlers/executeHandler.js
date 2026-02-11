@@ -11,7 +11,7 @@ const { getPool } = require('../db');
  * Supports: "data.order_id", "data.items[0].name", "status"
  */
 function extractJsonPath(obj, path) {
-  const parts = path.replace(/\[(\d+)\]/g, '.$1').split('.');
+  const parts = path.replace(/\[(\d+)\]/g, '.$1').split('.').filter(p => p !== '');
   let current = obj;
   for (const part of parts) {
     if (current === null || current === undefined) return undefined;

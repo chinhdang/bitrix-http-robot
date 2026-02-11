@@ -807,6 +807,38 @@ async function handleRobotSettings(req, res) {
       color: var(--color-text);
     }
 
+    .response-body-wrapper {
+      position: relative;
+    }
+
+    .btn-copy-response {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      padding: 3px 8px;
+      font-size: 11px;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      opacity: 0.7;
+      transition: all var(--transition-fast);
+      z-index: 1;
+    }
+
+    .btn-copy-response:hover {
+      opacity: 1;
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    .btn-copy-response.copied {
+      color: var(--color-success);
+      border-color: var(--color-success);
+      opacity: 1;
+    }
+
     .test-error {
       background: #ffebee;
       border: 1px solid #ffcdd2;
@@ -1108,7 +1140,10 @@ async function handleRobotSettings(req, res) {
 
           <div id="testResultsPanel" style="display:none;">
             <div id="testClickHint" class="help-text" style="display:none; margin-bottom:6px;">Click a value to add output mapping</div>
-            <pre class="response-body-pre" id="testResponseBody"></pre>
+            <div class="response-body-wrapper">
+              <button type="button" class="btn-copy-response" id="btnCopyResponse" onclick="copyResponseBody()" title="Copy response">Copy</button>
+              <pre class="response-body-pre" id="testResponseBody"></pre>
+            </div>
             <div id="testErrorPanel" style="display:none;" class="test-error"></div>
           </div>
         </div>
@@ -2078,6 +2113,7 @@ async function handleRobotSettings(req, res) {
           // Response body
           var bodyEl = document.getElementById('testResponseBody');
           var hintEl = document.getElementById('testClickHint');
+          lastTestResponseRaw = data.responseBody || '';
           if (data.responseBodyParsed) {
             lastTestResponseParsed = data.responseBodyParsed;
             bodyEl.innerHTML = renderInteractiveJson(data.responseBodyParsed);
@@ -2135,6 +2171,41 @@ async function handleRobotSettings(req, res) {
     }
 
     // --- Interactive JSON rendering ---
+
+    function copyResponseBody() {
+      var text = lastTestResponseRaw || '';
+      if (!text && lastTestResponseParsed) {
+        text = JSON.stringify(lastTestResponseParsed, null, 2);
+      }
+      if (!text) return;
+
+      navigator.clipboard.writeText(text).then(function() {
+        var btn = document.getElementById('btnCopyResponse');
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(function() {
+          btn.textContent = 'Copy';
+          btn.classList.remove('copied');
+        }, 1500);
+      }).catch(function() {
+        // Fallback for older browsers / iframe restrictions
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        var btn = document.getElementById('btnCopyResponse');
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(function() {
+          btn.textContent = 'Copy';
+          btn.classList.remove('copied');
+        }, 1500);
+      });
+    }
 
     function renderInteractiveJson(obj) {
       return '<div class="json-interactive">' + renderJsonNode(obj, '', 0) + '</div>';
@@ -2210,10 +2281,11 @@ async function handleRobotSettings(req, res) {
     // --- Inline value preview ---
 
     var lastTestResponseParsed = null;
+    var lastTestResponseRaw = '';
 
     function extractJsonPathClient(obj, path) {
       if (!obj || !path) return undefined;
-      var parts = path.replace(/\\[(\\d+)\\]/g, '.$1').split('.');
+      var parts = path.replace(/\\[(\\d+)\\]/g, '.$1').split('.').filter(function(p) { return p !== ''; });
       var current = obj;
       for (var i = 0; i < parts.length; i++) {
         if (current === null || current === undefined) return undefined;
