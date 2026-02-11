@@ -1241,6 +1241,9 @@ async function handleRobotSettings(req, res) {
       }
 
       // Load saved configuration
+      // Build display name -> template map for reverse conversion
+      buildDisplayNameMap();
+
       loadConfiguration();
 
       // Initialize character counters
@@ -1622,9 +1625,64 @@ async function handleRobotSettings(req, res) {
     var saveTimeout = null;
     var lastSavedConfig = '';
 
+    // Build reverse map: display name -> {=Document:CODE} template
+    // Used to convert Bitrix display names back to bizproc syntax before saving
+    var displayNameToTemplate = {};
+    function buildDisplayNameMap() {
+      availableVariables.forEach(function(v) {
+        if (v.name && v.template) {
+          displayNameToTemplate[v.name] = v.template;
+        }
+      });
+      console.log('Display name map built:', Object.keys(displayNameToTemplate).length, 'entries');
+    }
+
+    // Convert {{Display Name}} back to {=Document:CODE} in a string
+    function convertDisplayToTemplate(str) {
+      if (!str || typeof str !== 'string') return str;
+      return str.replace(/\{\{([^}]+)\}\}/g, function(match, displayName) {
+        var trimmed = displayName.trim();
+        var template = displayNameToTemplate[trimmed];
+        if (template) {
+          console.log('Converting:', match, '->', template);
+          return template;
+        }
+        return match; // keep original if no mapping found
+      });
+    }
+
+    // Convert all string values in config object
+    function convertConfigDisplayNames(config) {
+      var converted = {};
+      Object.keys(config).forEach(function(key) {
+        var val = config[key];
+        if (typeof val === 'string') {
+          converted[key] = convertDisplayToTemplate(val);
+        } else if (Array.isArray(val)) {
+          converted[key] = val.map(function(item) {
+            if (typeof item === 'object' && item !== null) {
+              var obj = {};
+              Object.keys(item).forEach(function(k) {
+                obj[k] = typeof item[k] === 'string' ? convertDisplayToTemplate(item[k]) : item[k];
+              });
+              return obj;
+            }
+            return typeof item === 'string' ? convertDisplayToTemplate(item) : item;
+          });
+        } else {
+          converted[key] = val;
+        }
+      });
+      return converted;
+    }
+
     // Core save function - calls setPropertyValue immediately
     function doSave() {
       var config = getCurrentConfig();
+
+      // Convert any {{Display Name}} back to {=Document:CODE} before saving
+      config = convertConfigDisplayNames(config);
+
       var configString = JSON.stringify(config);
 
       // Skip if nothing changed
