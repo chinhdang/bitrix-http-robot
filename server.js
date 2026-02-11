@@ -74,6 +74,11 @@ app.delete('/test-webhook/log', (req, res) => {
   res.json({ cleared: true });
 });
 
+// Debug endpoint - shows last PLACEMENT_OPTIONS received (document_fields, etc.)
+app.get('/debug/placement', (req, res) => {
+  res.json(app.locals.lastPlacementOptions || { message: 'No placement data yet. Open robot settings first.' });
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({

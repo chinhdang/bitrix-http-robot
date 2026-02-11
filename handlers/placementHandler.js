@@ -24,6 +24,8 @@ async function handleRobotSettings(req, res) {
           ? JSON.parse(req.body.PLACEMENT_OPTIONS)
           : req.body.PLACEMENT_OPTIONS;
         logger.info('PLACEMENT_OPTIONS parsed', { options });
+        // Save for debug endpoint
+        req.app.locals.lastPlacementOptions = options;
         if (options.current_values && options.current_values.config) {
           savedConfig = JSON.parse(options.current_values.config);
           logger.info('Loaded saved config', { savedConfig });
