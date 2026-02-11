@@ -44,24 +44,25 @@ async function handleRobotSettings(req, res) {
   <title>HTTP Request Configuration</title>
   <script src="//api.bitrix24.com/api/v1/"></script>
   <style>
-    /* B24UI Design Tokens - CSS Custom Properties for theming */
+    /* B24UI Design Tokens - aligned with https://bitrix24.github.io/b24ui */
     :root {
       /* Colors */
-      --color-primary: #2fc6f6;
-      --color-primary-dark: #1fb5e5;
-      --color-primary-darker: #0ea5d5;
-      --color-danger: #ff5c5c;
-      --color-danger-dark: #ff4747;
-      --color-danger-darker: #ff3232;
-      --color-warning: #ff9f43;
-      --color-text: #333f50;
+      --color-primary: #0075ff;
+      --color-primary-dark: #0062d6;
+      --color-primary-darker: #0050b3;
+      --color-danger: #ff5752;
+      --color-danger-dark: #e64940;
+      --color-danger-darker: #cc3a34;
+      --color-warning: #faa72c;
+      --color-success: #1bce7b;
+      --color-text: #333;
       --color-text-secondary: #525c69;
       --color-text-muted: #a8adb4;
-      --color-border: #dfe3e8;
-      --color-border-light: #eef2f5;
+      --color-border: #edeef0;
+      --color-border-light: #edeef0;
       --color-bg: #ffffff;
-      --color-bg-secondary: #fafbfc;
-      --color-bg-tertiary: #f3f5f7;
+      --color-bg-secondary: #eef2f4;
+      --color-bg-tertiary: #f5f7f8;
 
       /* Spacing */
       --space-xs: 6px;
@@ -71,8 +72,8 @@ async function handleRobotSettings(req, res) {
       --space-xl: 32px;
 
       /* Radius */
-      --radius-sm: 6px;
-      --radius-md: 8px;
+      --radius-sm: 4px;
+      --radius-md: 6px;
       --radius-lg: 10px;
       --radius-xl: 12px;
 
@@ -81,11 +82,11 @@ async function handleRobotSettings(req, res) {
       --transition-smooth: 200ms cubic-bezier(0.16, 1, 0.3, 1);
 
       /* Shadows */
-      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-      --shadow-primary: 0 0 0 1px var(--color-primary), 0 0 0 4px rgba(47, 198, 246, 0.1);
-      --shadow-primary-hover: 0 0 0 1px rgba(47, 198, 246, 0.2), 0 4px 6px -1px rgba(47, 198, 246, 0.2);
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.06);
+      --shadow-primary: 0 0 0 3px rgba(0, 117, 255, 0.15);
+      --shadow-primary-hover: 0 0 0 1px rgba(0, 117, 255, 0.3), 0 4px 6px -1px rgba(0, 117, 255, 0.15);
     }
 
     * {
@@ -107,14 +108,6 @@ async function handleRobotSettings(req, res) {
       margin: 0;
       background: var(--color-bg);
       padding: var(--space-md) 20px;
-    }
-
-    h2 {
-      margin-bottom: var(--space-lg);
-      color: var(--color-text);
-      font-size: 20px;
-      font-weight: 600;
-      letter-spacing: -0.3px;
     }
 
     .form-group {
@@ -147,11 +140,11 @@ async function handleRobotSettings(req, res) {
     select,
     textarea {
       width: 100%;
-      padding: var(--space-sm) 14px;
+      padding: 7px 12px;
       border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
+      border-radius: var(--radius-sm);
       font-size: 13px;
-      line-height: 1.5;
+      line-height: 1.4;
       font-family: inherit;
       transition: all var(--transition-fast);
       background: var(--color-bg);
@@ -168,7 +161,7 @@ async function handleRobotSettings(req, res) {
     textarea.error,
     select.error {
       border-color: var(--color-danger);
-      box-shadow: 0 0 0 1px var(--color-danger), 0 0 0 4px rgba(255, 92, 92, 0.1);
+      box-shadow: 0 0 0 1px var(--color-danger), 0 0 0 4px rgba(255, 87, 82, 0.1);
     }
 
     .error-message {
@@ -187,8 +180,8 @@ async function handleRobotSettings(req, res) {
       background: var(--color-bg);
       border: 1px solid var(--color-border);
       color: var(--color-text-muted);
-      width: 40px;
-      height: 40px;
+      width: 32px;
+      height: 32px;
       padding: 0;
       display: flex;
       align-items: center;
@@ -205,7 +198,7 @@ async function handleRobotSettings(req, res) {
       background: var(--color-primary);
       border-color: var(--color-primary);
       color: var(--color-bg);
-      box-shadow: 0 0 0 1px var(--color-primary), 0 4px 6px -1px rgba(47, 198, 246, 0.3);
+      box-shadow: 0 0 0 1px var(--color-primary), 0 4px 6px -1px rgba(0, 117, 255, 0.3);
       transform: scale(1.05);
     }
 
@@ -253,32 +246,33 @@ async function handleRobotSettings(req, res) {
     }
 
     .form-data-section {
-      border: 1px solid var(--color-border-light);
-      border-radius: var(--radius-lg);
-      padding: var(--space-md);
-      background: var(--color-bg-secondary);
-      margin-bottom: 12px;
+      border: none;
+      border-radius: 0;
+      padding: 0;
+      background: none;
+      margin-bottom: var(--space-md);
     }
 
     .form-data-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 18px;
+      margin-bottom: 10px;
     }
 
     .form-data-header h3 {
-      font-size: 15px;
+      font-size: 13px;
       font-weight: 600;
-      color: var(--color-text);
-      letter-spacing: -0.2px;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .form-data-row {
       display: grid;
-      grid-template-columns: 1fr 2fr 38px 38px;
-      gap: 10px;
-      margin-bottom: 10px;
+      grid-template-columns: 1fr 2fr 32px 32px;
+      gap: 6px;
+      margin-bottom: 6px;
       align-items: start;
     }
 
@@ -287,7 +281,7 @@ async function handleRobotSettings(req, res) {
     }
 
     .btn {
-      padding: var(--space-sm) 18px;
+      padding: 7px 14px;
       border: none;
       border-radius: var(--radius-md);
       font-size: 13px;
@@ -312,77 +306,42 @@ async function handleRobotSettings(req, res) {
     .btn-primary {
       background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
       color: white;
-      box-shadow: 0 0 0 1px rgba(47, 198, 246, 0.1), var(--shadow-sm);
+      box-shadow: 0 0 0 1px rgba(0, 117, 255, 0.1), var(--shadow-sm);
     }
 
     .btn-primary:hover:not(:disabled) {
       background: linear-gradient(180deg, var(--color-primary-dark) 0%, var(--color-primary-darker) 100%);
-      box-shadow: var(--shadow-primary-hover), 0 2px 4px -2px rgba(47, 198, 246, 0.15);
+      box-shadow: var(--shadow-primary-hover), 0 2px 4px -2px rgba(0, 117, 255, 0.15);
       transform: translateY(-1px);
     }
 
     .btn-primary:active:not(:disabled) {
       transform: translateY(0);
-      box-shadow: 0 0 0 1px rgba(47, 198, 246, 0.2), var(--shadow-sm);
-    }
-
-    .btn-success {
-      background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-      color: white;
-      padding: var(--space-sm) var(--space-lg);
-      font-size: 13px;
-      box-shadow: 0 0 0 1px rgba(47, 198, 246, 0.1), var(--shadow-sm);
-    }
-
-    .btn-success:hover:not(:disabled) {
-      background: linear-gradient(180deg, var(--color-primary-dark) 0%, var(--color-primary-darker) 100%);
-      box-shadow: var(--shadow-primary-hover), 0 2px 4px -2px rgba(47, 198, 246, 0.15);
-      transform: translateY(-1px);
-    }
-
-    .btn-success:active:not(:disabled) {
-      transform: translateY(0);
+      box-shadow: 0 0 0 1px rgba(0, 117, 255, 0.2), var(--shadow-sm);
     }
 
     .btn-danger {
       background: linear-gradient(180deg, var(--color-danger) 0%, var(--color-danger-dark) 100%);
       color: white;
-      width: 40px;
-      height: 40px;
+      width: 32px;
+      height: 32px;
       padding: 0;
       display: flex;
       align-items: center;
       justify-content: center;
       border-radius: var(--radius-md);
       border: none;
-      box-shadow: 0 0 0 1px rgba(255, 92, 92, 0.1), var(--shadow-sm);
+      box-shadow: 0 0 0 1px rgba(255, 87, 82, 0.1), var(--shadow-sm);
     }
 
     .btn-danger:hover:not(:disabled) {
       background: linear-gradient(180deg, var(--color-danger-dark) 0%, var(--color-danger-darker) 100%);
-      box-shadow: 0 0 0 1px rgba(255, 92, 92, 0.2), 0 4px 6px -1px rgba(255, 92, 92, 0.3);
+      box-shadow: 0 0 0 1px rgba(255, 87, 82, 0.2), 0 4px 6px -1px rgba(255, 87, 82, 0.3);
       transform: scale(1.05);
     }
 
     .btn-danger:active:not(:disabled) {
       transform: scale(0.98);
-    }
-
-    .btn-secondary {
-      background: var(--color-bg);
-      color: var(--color-text-secondary);
-      border: 1px solid var(--color-border);
-      box-shadow: var(--shadow-sm);
-    }
-
-    .btn-secondary:hover:not(:disabled) {
-      background: #f8f9fa;
-      border-color: #d0d5db;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    }
-
-    .btn-secondary:active:not(:disabled) {
-      background: var(--color-bg-tertiary);
     }
 
     /* Two columns for compact fields */
@@ -399,39 +358,11 @@ async function handleRobotSettings(req, res) {
       line-height: 1.5;
     }
 
-    .alert {
-      padding: 14px 18px;
-      border-radius: var(--radius-md);
-      margin-bottom: var(--space-lg);
-      font-size: 13px;
-      line-height: 1.6;
-      border-left: 3px solid;
-    }
-
-    .alert-info {
-      background: #e8f7ff;
-      border-left-color: var(--color-primary);
-      color: #0087c7;
-    }
-
     .empty-state {
       text-align: center;
       padding: var(--space-md) 20px;
       color: var(--color-text-muted);
       font-size: 13px;
-    }
-
-    /* Keyboard shortcut hint */
-    .keyboard-hint {
-      display: inline-block;
-      padding: 2px 6px;
-      background: var(--color-bg-tertiary);
-      border: 1px solid var(--color-border);
-      border-radius: 4px;
-      font-size: 11px;
-      font-family: monospace;
-      color: var(--color-text-muted);
-      margin-left: 8px;
     }
 
     /* Tabs Interface */
@@ -458,7 +389,7 @@ async function handleRobotSettings(req, res) {
 
     .tab:hover {
       color: var(--color-primary);
-      background: rgba(47, 198, 246, 0.05);
+      background: rgba(0, 117, 255, 0.05);
     }
 
     .tab.active {
@@ -533,7 +464,7 @@ async function handleRobotSettings(req, res) {
     }
 
     .segment:hover {
-      background: rgba(47, 198, 246, 0.1);
+      background: rgba(0, 117, 255, 0.1);
       color: var(--color-primary);
     }
 
@@ -551,9 +482,9 @@ async function handleRobotSettings(req, res) {
     /* Headers as Key-Value Pairs */
     .header-row {
       display: grid;
-      grid-template-columns: 1fr 2fr 38px 38px;
-      gap: 8px;
-      margin-bottom: 8px;
+      grid-template-columns: 1fr 2fr 32px 32px;
+      gap: 6px;
+      margin-bottom: 6px;
       align-items: start;
     }
 
@@ -748,7 +679,7 @@ async function handleRobotSettings(req, res) {
       border-color: transparent;
       color: var(--color-bg);
       transform: translateY(-2px);
-      box-shadow: 0 0 0 1px rgba(47, 198, 246, 0.3), 0 4px 6px -1px rgba(47, 198, 246, 0.3);
+      box-shadow: 0 0 0 1px rgba(0, 117, 255, 0.3), 0 4px 6px -1px rgba(0, 117, 255, 0.3);
     }
 
     .variable-item:focus-visible {
@@ -758,7 +689,7 @@ async function handleRobotSettings(req, res) {
 
     .variable-item:active {
       transform: translateY(0);
-      box-shadow: 0 0 0 1px rgba(47, 198, 246, 0.3), 0 2px 4px rgba(47, 198, 246, 0.3);
+      box-shadow: 0 0 0 1px rgba(0, 117, 255, 0.3), 0 2px 4px rgba(0, 117, 255, 0.3);
     }
 
     .no-variables {
@@ -771,9 +702,9 @@ async function handleRobotSettings(req, res) {
     /* Output Mapping Rows */
     .output-mapping-row {
       display: grid;
-      grid-template-columns: auto 1fr 1fr 38px;
-      gap: 8px;
-      margin-bottom: 8px;
+      grid-template-columns: auto 1fr 1fr 32px;
+      gap: 6px;
+      margin-bottom: 6px;
       align-items: start;
     }
 
@@ -784,7 +715,7 @@ async function handleRobotSettings(req, res) {
     .output-slot-label {
       display: flex;
       align-items: center;
-      height: 40px;
+      height: 32px;
       font-size: 12px;
       font-weight: 600;
       color: var(--color-primary);
@@ -866,14 +797,14 @@ async function handleRobotSettings(req, res) {
     }
 
     .btn-test {
-      background: linear-gradient(180deg, #4caf50 0%, #43a047 100%);
+      background: linear-gradient(180deg, var(--color-success) 0%, #17b86d 100%);
       color: white;
-      box-shadow: 0 0 0 1px rgba(76, 175, 80, 0.1), var(--shadow-sm);
+      box-shadow: 0 0 0 1px rgba(27, 206, 123, 0.1), var(--shadow-sm);
     }
 
     .btn-test:hover:not(:disabled) {
-      background: linear-gradient(180deg, #43a047 0%, #388e3c 100%);
-      box-shadow: 0 0 0 1px rgba(76, 175, 80, 0.2), 0 4px 6px -1px rgba(76, 175, 80, 0.3);
+      background: linear-gradient(180deg, #17b86d 0%, #14a562 100%);
+      box-shadow: 0 0 0 1px rgba(27, 206, 123, 0.2), 0 4px 6px -1px rgba(27, 206, 123, 0.3);
       transform: translateY(-1px);
     }
 
@@ -919,7 +850,7 @@ async function handleRobotSettings(req, res) {
     }
 
     .json-clickable:hover {
-      background: rgba(47, 198, 246, 0.15);
+      background: rgba(0, 117, 255, 0.15);
     }
 
     @keyframes flashAdded {
@@ -1140,6 +1071,7 @@ async function handleRobotSettings(req, res) {
           </div>
 
           <div id="testResultsPanel" style="display:none;">
+            <div id="testClickHint" class="help-text" style="display:none; margin-bottom:6px;">Click a value to add output mapping</div>
             <pre class="response-body-pre" id="testResponseBody"></pre>
             <div id="testErrorPanel" style="display:none;" class="test-error"></div>
           </div>
@@ -2083,12 +2015,15 @@ async function handleRobotSettings(req, res) {
 
           // Response body
           var bodyEl = document.getElementById('testResponseBody');
+          var hintEl = document.getElementById('testClickHint');
           if (data.responseBodyParsed) {
             lastTestResponseParsed = data.responseBodyParsed;
             bodyEl.innerHTML = renderInteractiveJson(data.responseBodyParsed);
+            hintEl.style.display = 'block';
           } else {
             lastTestResponseParsed = null;
             bodyEl.textContent = data.responseBody || '(empty)';
+            hintEl.style.display = 'none';
           }
 
           updateMappingPreviews();
@@ -2096,6 +2031,7 @@ async function handleRobotSettings(req, res) {
         } else {
           lastTestResponseParsed = null;
           clearMappingPreviews();
+          document.getElementById('testClickHint').style.display = 'none';
           badge.textContent = 'Error';
           badge.className = 'status-badge status-5xx';
           badge.style.display = 'inline-block';
@@ -2112,6 +2048,7 @@ async function handleRobotSettings(req, res) {
       .catch(function(err) {
         lastTestResponseParsed = null;
         clearMappingPreviews();
+        document.getElementById('testClickHint').style.display = 'none';
         resultsPanel.style.display = 'block';
         errorPanel.style.display = 'block';
         errorPanel.textContent = 'Network error: ' + err.message;
