@@ -1,8 +1,9 @@
 const axios = require('axios');
 require('dotenv').config();
 
+const { getAccessToken } = require('./services/tokenManager');
+
 const BITRIX24_DOMAIN = process.env.BITRIX24_DOMAIN;
-const ACCESS_TOKEN = process.env.BITRIX24_ACCESS_TOKEN;
 const HANDLER_URL = process.env.HANDLER_URL;
 const USER_ID = process.env.BITRIX24_USER_ID || '1'; // Default to user 1 (admin)
 
@@ -94,8 +95,9 @@ async function installRobot() {
     console.log(`Domain: ${BITRIX24_DOMAIN}`);
     console.log(`Handler URL: ${robotConfig.HANDLER}`);
 
+    const accessToken = await getAccessToken();
     const response = await axios.post(
-      `https://${BITRIX24_DOMAIN}/rest/bizproc.robot.add?auth=${ACCESS_TOKEN}`,
+      `https://${BITRIX24_DOMAIN}/rest/bizproc.robot.add?auth=${accessToken}`,
       robotConfig
     );
 
@@ -130,8 +132,9 @@ async function installActivity() {
     console.log(`Domain: ${BITRIX24_DOMAIN}`);
     console.log(`Handler URL: ${robotConfig.HANDLER}`);
 
+    const accessToken = await getAccessToken();
     const response = await axios.post(
-      `https://${BITRIX24_DOMAIN}/rest/bizproc.activity.add?auth=${ACCESS_TOKEN}`,
+      `https://${BITRIX24_DOMAIN}/rest/bizproc.activity.add?auth=${accessToken}`,
       robotConfig
     );
 
@@ -165,10 +168,6 @@ function validateConfig() {
 
   if (!BITRIX24_DOMAIN) {
     errors.push('BITRIX24_DOMAIN is not set in .env');
-  }
-
-  if (!ACCESS_TOKEN) {
-    errors.push('BITRIX24_ACCESS_TOKEN is not set in .env');
   }
 
   if (!HANDLER_URL) {

@@ -1,8 +1,9 @@
 const axios = require('axios');
 require('dotenv').config();
 
+const { getAccessToken } = require('./services/tokenManager');
+
 const DOMAIN = process.env.BITRIX24_DOMAIN;
-const ACCESS_TOKEN = process.env.BITRIX24_ACCESS_TOKEN;
 const CODE = 'http_request_robot';
 
 async function uninstallRobot() {
@@ -12,7 +13,8 @@ async function uninstallRobot() {
     console.log('============================================================\n');
 
     console.log('Uninstalling robot...');
-    const url = `https://${DOMAIN}/rest/bizproc.robot.delete?auth=${ACCESS_TOKEN}`;
+    const accessToken = await getAccessToken();
+    const url = `https://${DOMAIN}/rest/bizproc.robot.delete?auth=${accessToken}`;
 
     const response = await axios.post(url, { CODE: CODE });
 
@@ -30,7 +32,8 @@ async function uninstallRobot() {
 async function uninstallActivity() {
   try {
     console.log('\nUninstalling activity...');
-    const url = `https://${DOMAIN}/rest/bizproc.activity.delete?auth=${ACCESS_TOKEN}`;
+    const accessToken = await getAccessToken();
+    const url = `https://${DOMAIN}/rest/bizproc.activity.delete?auth=${accessToken}`;
 
     const response = await axios.post(url, { CODE: CODE });
 

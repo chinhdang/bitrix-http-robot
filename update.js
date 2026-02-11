@@ -2,9 +2,9 @@ const axios = require('axios');
 require('dotenv').config();
 
 const { robotConfig } = require('./install');
+const { getAccessToken } = require('./services/tokenManager');
 
 const DOMAIN = process.env.BITRIX24_DOMAIN;
-const ACCESS_TOKEN = process.env.BITRIX24_ACCESS_TOKEN;
 const HANDLER_URL = process.env.HANDLER_URL;
 const USER_ID = process.env.BITRIX24_USER_ID || '1';
 
@@ -21,7 +21,8 @@ async function updateRobot() {
     console.log(`  Handler URL: ${HANDLER_URL}`);
     console.log(`  Code: ${CODE}\n`);
 
-    const url = `https://${DOMAIN}/rest/bizproc.robot.update?auth=${ACCESS_TOKEN}`;
+    const accessToken = await getAccessToken();
+    const url = `https://${DOMAIN}/rest/bizproc.robot.update?auth=${accessToken}`;
 
     const data = {
       CODE: CODE,
@@ -53,7 +54,8 @@ async function updateRobot() {
 
 async function updateActivity() {
   try {
-    const url = `https://${DOMAIN}/rest/bizproc.activity.update?auth=${ACCESS_TOKEN}`;
+    const accessToken = await getAccessToken();
+    const url = `https://${DOMAIN}/rest/bizproc.activity.update?auth=${accessToken}`;
 
     const data = {
       CODE: CODE,
