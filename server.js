@@ -199,10 +199,24 @@ app.post('/admin', async (req, res) => {
 
     const { DOMAIN, AUTH_ID, REFRESH_ID, member_id, LANG } = req.body;
 
-    // Upsert account if DB is available
-    if (require('./db').getPool() && member_id && DOMAIN) {
+    // Extract domain: POST body > Referer header > env fallback
+    let domain = DOMAIN || '';
+    if (!domain && req.headers.referer) {
       try {
-        await accountService.upsertAccount(member_id, DOMAIN);
+        const refUrl = new URL(req.headers.referer);
+        domain = refUrl.hostname;
+      } catch (e) { /* ignore parse error */ }
+    }
+    if (!domain) {
+      domain = process.env.BITRIX24_DOMAIN || '';
+    }
+
+    logger.info('Admin page auth', { domain, memberId: member_id, hasAuthId: !!AUTH_ID });
+
+    // Upsert account if DB is available
+    if (require('./db').getPool() && member_id && domain) {
+      try {
+        await accountService.upsertAccount(member_id, domain);
       } catch (err) {
         logger.error('Admin page: account upsert failed', { error: err.message });
       }
@@ -218,7 +232,7 @@ app.post('/admin', async (req, res) => {
 
     // Inject auth context into the page
     const authScript = `<script>window.__B24_AUTH__=${JSON.stringify({
-      domain: DOMAIN || '',
+      domain: domain,
       authId: AUTH_ID || '',
       refreshId: REFRESH_ID || '',
       memberId: member_id || '',
