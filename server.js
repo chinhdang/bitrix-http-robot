@@ -181,7 +181,7 @@ app.get('/health', (req, res) => {
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({
-    name: 'Bitrix24 HTTP Request Robot',
+    name: '[SYNITY] HTTP Request',
     version: '1.0.0',
     status: 'running'
   });
