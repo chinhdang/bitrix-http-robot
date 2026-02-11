@@ -189,10 +189,22 @@ async function executeHttpRequest(req, res) {
     };
 
     // Extract output mappings from response
+    logger.info('Output mapping config', {
+      hasOutputMappings: !!config.outputMappings,
+      isArray: Array.isArray(config.outputMappings),
+      count: config.outputMappings ? config.outputMappings.length : 0,
+      mappings: config.outputMappings
+    });
+
     if (config.outputMappings && Array.isArray(config.outputMappings)) {
       const responseData = typeof response.data === 'object'
         ? response.data
         : (() => { try { return JSON.parse(response.data); } catch (e) { return null; } })();
+
+      logger.info('Response data for extraction', {
+        type: typeof response.data,
+        parsedOk: !!responseData
+      });
 
       if (responseData) {
         config.outputMappings.forEach(mapping => {
@@ -202,6 +214,12 @@ async function executeHttpRequest(req, res) {
               returnValues[mapping.output] = value !== undefined
                 ? (typeof value === 'object' ? JSON.stringify(value) : String(value))
                 : '';
+              logger.info('Extracted output mapping', {
+                output: mapping.output,
+                path: mapping.path,
+                rawValue: value,
+                finalValue: returnValues[mapping.output]
+              });
             } catch (e) {
               logger.warn('Failed to extract output mapping', { path: mapping.path, error: e.message });
               returnValues[mapping.output] = '';
@@ -211,15 +229,17 @@ async function executeHttpRequest(req, res) {
       }
     }
 
+    logger.info('Final return_values to Bitrix24', { returnValues });
+
     // Send result back to Bitrix24
-    await sendBizprocEvent({
+    const bizprocResult = await sendBizprocEvent({
       event_token: event_token,
       return_values: returnValues,
       log_message: `HTTP ${requestConfig.method} request to ${config.url} completed with status ${response.status} in ${executionTime}ms`,
       auth: auth
     });
 
-    logger.info('Response sent to Bitrix24', { event_token });
+    logger.info('bizproc.event.send response', { event_token, bizprocResult });
 
     // Respond to Bitrix24 immediately
     res.json({
