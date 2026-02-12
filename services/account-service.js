@@ -51,4 +51,17 @@ async function updatePlan(memberId, plan) {
   return result.rows[0] || null;
 }
 
-module.exports = { upsertAccount, getByMemberId, getOrCreate, updatePlan };
+/**
+ * Update plan by domain
+ */
+async function updatePlanByDomain(domain, plan) {
+  const result = await query(
+    `UPDATE accounts SET plan = $1, updated_at = NOW()
+     WHERE domain = $2
+     RETURNING *`,
+    [plan, domain]
+  );
+  return result.rows[0] || null;
+}
+
+module.exports = { upsertAccount, getByMemberId, getOrCreate, updatePlan, updatePlanByDomain };
